@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <Extern href="stdidcmd.h"/>
+  <Extern href="vsshlids.h"/>
+  <Include href="KnownImageIds.vsct"/>
+
+  <Commands package="guidDtsPackage">
+    <Groups>
+      <Group guid="guidDtsPackageCmdSet" id="MyMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
+      </Group>
+    </Groups>
+
+    <Buttons>
+      <Button guid="guidDtsPackageCmdSet" id="ToggleCustomToolId" priority="0x0100" type="Button">
+        <Parent guid="guidDtsPackageCmdSet" id="MyMenuGroup" />
+        <Icon guid="ImageCatalogGuid" id="TSFileNode" />
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <ButtonText>Generate d.ts file</ButtonText>
+        </Strings>
+      </Button>
+    </Buttons>
+  </Commands>
+
+  <VisibilityConstraints>
+    <VisibilityItem guid="guidDtsPackageCmdSet" id="ToggleCustomToolId"  context="UIContextRule"/>
+  </VisibilityConstraints>
+
+  <Symbols>
+    <GuidSymbol name="guidDtsPackage" value="{d1e45432-d98b-4053-b3d7-e16d258c2959}" />
+    <GuidSymbol name="UIContextRule" value="{8ca1b9b9-fd6e-4a5a-a036-86da7e62912b}" />
+
+    <GuidSymbol name="guidDtsPackageCmdSet" value="{cf29ca9f-817e-4ce6-baa5-5fbe652b97ce}">
+      <IDSymbol name="MyMenuGroup" value="0x1020" />
+      <IDSymbol name="ToggleCustomToolId" value="0x0100" />
+    </GuidSymbol>
+  </Symbols>
+</CommandTable>
