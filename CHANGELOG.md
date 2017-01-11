@@ -1,9 +1,5 @@
 # Road map
 
-- [x] Single File Generator
-- [x] Command to toggle custom tool
-- [x] Update readme file with screenshots etc.
-- [x] Website project support
 - [ ] Test on VB files
 
 Features that have a checkmark are complete and available for
@@ -19,3 +15,7 @@ on the official Visual Studio extension gallery.
 ## 1.0
 
 - [x] Initial release
+- [x] Single File Generator
+- [x] Command to toggle custom tool
+- [x] Update readme file with screenshots etc.
+- [x] Website project support

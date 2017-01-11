@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="cad7b20b-4b83-4ca6-bf24-ca36a494241c" Version="0.1" Language="en-US" Publisher="Mads Kristensen" />
+    <Identity Id="cad7b20b-4b83-4ca6-bf24-ca36a494241c" Version="1.0" Language="en-US" Publisher="Mads Kristensen" />
     <DisplayName>TypeScript Definition Generator</DisplayName>
-    <Description xml:space="preserve">Creates and synchronizes TypeScript Definition files (d.ts) from C#/VB model classes</Description>
+    <Description xml:space="preserve">Creates and synchronizes TypeScript Definition files (d.ts) from C#/VB model classes. Works on all .NET project types</Description>
     <MoreInfo>https://github.com/madskristensen/TypeScriptDefinitionGenerator</MoreInfo>
     <License>Resources\LICENSE</License>
     <ReleaseNotes>https://github.com/madskristensen/TypeScriptDefinitionGenerator/blob/master/CHANGELOG.md</ReleaseNotes>

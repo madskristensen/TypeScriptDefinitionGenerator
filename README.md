@@ -8,7 +8,7 @@ or get the [CI build](http://vsixgallery.com/extension/cad7b20b-4b83-4ca6-bf24-c
 
 ---------------------------------------
 
-Creates and synchronizes TypeScript Definition files (d.ts) from C#/VB model classes
+Creates and synchronizes TypeScript Definition files (d.ts) from C#/VB model classes. Works on all .NET project types
 
 See the [change log](CHANGELOG.md) for changes and road map.
 
