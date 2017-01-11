@@ -397,7 +397,7 @@ namespace TypeScriptDefinitionGenerator
             }
             catch (Exception ex)
             {
-                // TODO: Logging
+                Telemetry.TrackException("GetSummary", ex);
                 return null;
             }
         }

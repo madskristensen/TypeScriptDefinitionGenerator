@@ -13,6 +13,6 @@ namespace TypeScriptDefinitionGenerator
         public const string Language = "en-US";
         public const string Version = "0.1";
         public const string Author = "Mads Kristensen";
-        public const string Tags = "typescript, d.ts";
+        public const string Tags = "typescript, d.ts, model";
     }
 }

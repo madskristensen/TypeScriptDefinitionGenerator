@@ -4,6 +4,7 @@ using System;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Tasks = System.Threading.Tasks;
 
 namespace TypeScriptDefinitionGenerator
 {
@@ -27,7 +28,7 @@ namespace TypeScriptDefinitionGenerator
             private set;
         }
 
-        protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+        protected override async Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             Options = (Options)GetDialogPage(typeof(Options));
 
