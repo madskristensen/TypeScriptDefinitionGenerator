@@ -1,10 +1,34 @@
 ﻿using EnvDTE;
+using EnvDTE80;
+using Microsoft.VisualStudio.Shell;
 using System;
+using System.IO;
 
 namespace TypeScriptDefinitionGenerator
 {
     public static class VSHelpers
     {
+        private static DTE2 DTE { get; } = Package.GetGlobalService(typeof(DTE)) as DTE2;
+
+        public static ProjectItem GetProjectItem(string fileName)
+        {
+            return DTE.Solution.FindProjectItem(fileName);
+        }
+
+        public static void CheckFileOutOfSourceControl(string file)
+        {
+            if (!File.Exists(file) || DTE.Solution.FindProjectItem(file) == null)
+                return;
+
+            if (DTE.SourceControl.IsItemUnderSCC(file) && !DTE.SourceControl.IsItemCheckedOut(file))
+                DTE.SourceControl.CheckOutItem(file);
+
+            var info = new FileInfo(file)
+            {
+                IsReadOnly = false
+            };
+        }
+
         public static bool IsKind(this Project project, params string[] kindGuids)
         {
             foreach (var guid in kindGuids)

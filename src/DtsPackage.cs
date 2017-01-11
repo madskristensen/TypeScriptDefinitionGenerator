@@ -1,7 +1,8 @@
-﻿using Microsoft.VisualStudio.Shell;
+﻿using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextTemplating.VSHost;
 using System;
-using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Tasks = System.Threading.Tasks;
@@ -28,12 +29,17 @@ namespace TypeScriptDefinitionGenerator
             private set;
         }
 
+        public static void EnsurePackageLoad()
+        {
+            var shell = GetGlobalService(typeof(SVsShell)) as IVsShell;
+            ErrorHandler.ThrowOnFailure(shell.LoadPackage(PackageGuids.guidDtsPackage, out var ppPackage));
+        }
+
         protected override async Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             Options = (Options)GetDialogPage(typeof(Options));
 
-            var commandService = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
-            ToggleCustomTool.Initialize(this, commandService);
+            await ToggleCustomTool.InitializeAsync(this);
         }
     }
 }

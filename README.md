@@ -12,9 +12,6 @@ Creates and synchronizes TypeScript Definition files (d.ts) from C#/VB model cla
 
 See the [change log](CHANGELOG.md) for changes and road map.
 
-## .NET Core not supported (yet!)
-This extension doesn't work for .NET Core projects due to an issue with missing support for _Single File Generators_. Help the Roslyn Project System team know the importance of adding the support by voting for [this issue on their repro](https://github.com/dotnet/roslyn-project-system/issues/1136).
-
 ## From C# to .d.ts file
 This extension will automatically generate .d.ts files from any C#/VB file you specify. It will turn the following C# class into a TypeScript interface.
 
