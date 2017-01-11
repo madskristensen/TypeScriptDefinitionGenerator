@@ -6,9 +6,7 @@
 
   <Commands package="guidDtsPackage">
     <Groups>
-      <Group guid="guidDtsPackageCmdSet" id="MyMenuGroup" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
-      </Group>
+      <Group guid="guidDtsPackageCmdSet" id="MyMenuGroup" priority="0x0600" />
     </Groups>
 
     <Buttons>
@@ -21,6 +19,15 @@
       </Button>
     </Buttons>
   </Commands>
+
+  <CommandPlacements>
+    <CommandPlacement guid="guidDtsPackageCmdSet" id="MyMenuGroup" priority="0x0200">
+      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidDtsPackageCmdSet" id="MyMenuGroup" priority="0x0200">
+      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_WEBITEMNODE"/>
+    </CommandPlacement>
+  </CommandPlacements>
 
   <VisibilityConstraints>
     <VisibilityItem guid="guidDtsPackageCmdSet" id="ToggleCustomToolId"  context="UIContextRule"/>

@@ -31,8 +31,11 @@ namespace TypeScriptDefinitionGenerator
 
         public static void EnsurePackageLoad()
         {
-            var shell = GetGlobalService(typeof(SVsShell)) as IVsShell;
-            ErrorHandler.ThrowOnFailure(shell.LoadPackage(PackageGuids.guidDtsPackage, out var ppPackage));
+            if (Options == null)
+            {
+                var shell = GetGlobalService(typeof(SVsShell)) as IVsShell;
+                ErrorHandler.ThrowOnFailure(shell.LoadPackage(PackageGuids.guidDtsPackage, out var ppPackage));
+            }
         }
 
         protected override async Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)

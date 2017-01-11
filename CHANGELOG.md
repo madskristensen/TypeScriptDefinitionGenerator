@@ -3,8 +3,8 @@
 - [x] Single File Generator
 - [x] Command to toggle custom tool
 - [x] Update readme file with screenshots etc.
+- [x] Website project support
 - [ ] Test on VB files
-- [ ] Test on Website Project
 
 Features that have a checkmark are complete and available for
 download in the

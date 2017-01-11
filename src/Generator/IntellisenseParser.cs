@@ -17,10 +17,10 @@ namespace TypeScriptDefinitionGenerator
         private static readonly Regex IsNumber = new Regex("^[0-9a-fx]+[ul]{0,2}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static Project _project;
 
-        internal static class Ext
-        {
-            public const string TypeScript = ".d.ts";
-        }
+        //internal static class Ext
+        //{
+        //    public const string TypeScript = ".d.ts";
+        //}
 
         internal static IEnumerable<IntellisenseObject> ProcessFile(ProjectItem item, HashSet<CodeClass> underProcess = null)
         {
@@ -83,7 +83,7 @@ namespace TypeScriptDefinitionGenerator
                 var references = new HashSet<string>();
 
                 // Process Inheritence.
-                if (baseClass != null && !underProcess.Contains(baseClass) && !HasIntellisense(baseClass.ProjectItem, Ext.TypeScript, references))
+                if (baseClass != null && !underProcess.Contains(baseClass) && !HasIntellisense(baseClass.ProjectItem, Constants.FileExtension, references))
                 {
                     list.Last().UpdateReferences(references);
                     underProcess.Add(baseClass);
@@ -244,8 +244,8 @@ namespace TypeScriptDefinitionGenerator
                     effectiveTypeRef.TypeKind == vsCMTypeRef.vsCMTypeRefCodeType &&
                     effectiveTypeRef.CodeType.InfoLocation == vsCMInfoLocation.vsCMInfoLocationProject
                     ?
-                        (codeClass != null && HasIntellisense(codeClass.ProjectItem, Ext.TypeScript, references) ? (GetNamespace(codeClass) + "." + GetClassName(codeClass)) : null) ??
-                        (codeEnum != null && HasIntellisense(codeEnum.ProjectItem, Ext.TypeScript, references) ? (GetNamespace(codeEnum) + "." + codeEnum.Name) : null)
+                        (codeClass != null && HasIntellisense(codeClass.ProjectItem, Constants.FileExtension, references) ? (GetNamespace(codeClass) + "." + GetClassName(codeClass)) : null) ??
+                        (codeEnum != null && HasIntellisense(codeEnum.ProjectItem, Constants.FileExtension, references) ? (GetNamespace(codeEnum) + "." + codeEnum.Name) : null)
                     : null
             };
 

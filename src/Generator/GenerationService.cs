@@ -13,7 +13,7 @@ namespace TypeScriptDefinitionGenerator
     [ContentType("csharp")]
     [ContentType("basic")]
     [TextViewRole(PredefinedTextViewRoles.PrimaryDocument)]
-    public class CreationListener : IWpfTextViewCreationListener
+    public class GenerationService : IWpfTextViewCreationListener
     {
         private ProjectItem _item;
 
@@ -43,12 +43,25 @@ namespace TypeScriptDefinitionGenerator
             CreateDtsFile(_item);
         }
 
+        public static string ConvertToTypeScript(ProjectItem sourceItem)
+        {
+            try
+            {
+                var list = IntellisenseParser.ProcessFile(sourceItem);
+                return IntellisenseWriter.WriteTypeScript(list);
+            }
+            catch (Exception ex)
+            {
+                Telemetry.TrackException("ParseFailure", ex);
+                return null;
+            }
+        }
+
         public static void CreateDtsFile(ProjectItem sourceItem)
         {
             string sourceFile = sourceItem.FileNames[1];
-            string dtsFile = Path.ChangeExtension(sourceFile, ".d.ts");
-            var list = IntellisenseParser.ProcessFile(sourceItem);
-            var dts = IntellisenseWriter.WriteTypeScript(list);
+            string dtsFile = Path.ChangeExtension(sourceFile, Constants.FileExtension);
+            string dts = ConvertToTypeScript(sourceItem);
 
             VSHelpers.CheckFileOutOfSourceControl(dtsFile);
             File.WriteAllText(dtsFile, dts);

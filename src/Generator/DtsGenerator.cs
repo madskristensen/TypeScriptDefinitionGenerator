@@ -11,9 +11,10 @@ namespace TypeScriptDefinitionGenerator
         public const string Name = nameof(DtsGenerator);
         public const string Description = "Automatically generates the .d.ts file based on the C#/VB model class.";
 
+
         public override string GetDefaultExtension()
         {
-            return ".d.ts";
+            return Constants.FileExtension;
         }
 
         protected override byte[] GenerateCode(string inputFileName, string inputFileContent)
@@ -24,8 +25,7 @@ namespace TypeScriptDefinitionGenerator
             {
                 try
                 {
-                    var list = IntellisenseParser.ProcessFile(item);
-                    var dts = IntellisenseWriter.WriteTypeScript(list);
+                    var dts = GenerationService.ConvertToTypeScript(item);
 
                     Telemetry.TrackOperation("FileGenerated");
 

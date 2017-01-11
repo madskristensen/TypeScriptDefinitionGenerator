@@ -1,18 +1,17 @@
 ﻿using EnvDTE;
-using Tasks = System.Threading.Tasks;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
 using System;
 using System.ComponentModel.Design;
 using System.IO;
 using System.Linq;
+using Tasks = System.Threading.Tasks;
 
 namespace TypeScriptDefinitionGenerator
 {
     internal sealed class ToggleCustomTool
     {
         private readonly Package _package;
-        private string[] _extesions = { ".cs", ".vb" };
         private ProjectItem _item;
         private DTE2 _dte;
 
@@ -42,6 +41,7 @@ namespace TypeScriptDefinitionGenerator
         {
             var commandService = await package.GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
             var dte = await package.GetServiceAsync(typeof(DTE)) as DTE2;
+
             Instance = new ToggleCustomTool(package, commandService, dte);
         }
 
@@ -55,17 +55,17 @@ namespace TypeScriptDefinitionGenerator
 
             _item = _dte.SelectedItems?.Item(1)?.ProjectItem;
 
-            if (_item == null || _item.ContainingProject == null)
+            if (_item == null || _item.ContainingProject == null || _item.FileCodeModel == null)
                 return;
 
             var fileName = _item.FileNames[1];
             var ext = Path.GetExtension(fileName);
 
-            if (_extesions.Contains(ext, StringComparer.OrdinalIgnoreCase))
+            if (Constants.SupportedSourceExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
             {
                 if (_item.ContainingProject.IsKind(ProjectTypes.DOTNET_Core, ProjectTypes.ASPNET_5, ProjectTypes.WEBSITE_PROJECT))
                 {
-                    string dtsFile = Path.ChangeExtension(_item.FileNames[1], ".d.ts");
+                    string dtsFile = Path.ChangeExtension(_item.FileNames[1], Constants.FileExtension);
                     button.Checked = File.Exists(dtsFile);
                 }
                 else
@@ -79,9 +79,10 @@ namespace TypeScriptDefinitionGenerator
 
         private void Execute(object sender, EventArgs e)
         {
+            // .NET Core and Website projects
             if (_item.ContainingProject.IsKind(ProjectTypes.DOTNET_Core, ProjectTypes.ASPNET_5, ProjectTypes.WEBSITE_PROJECT))
             {
-                string dtsFile = Path.ChangeExtension(_item.FileNames[1], ".d.ts");
+                string dtsFile = Path.ChangeExtension(_item.FileNames[1], Constants.FileExtension);
                 bool synOn = File.Exists(dtsFile);
 
                 if (synOn)
@@ -92,9 +93,10 @@ namespace TypeScriptDefinitionGenerator
                 }
                 else
                 {
-                    CreationListener.CreateDtsFile(_item);
+                    GenerationService.CreateDtsFile(_item);
                 }
             }
+            // Legacy .NET projects
             else
             {
                 bool synOn = _item.Properties.Item("CustomTool").Value.ToString() == DtsGenerator.Name;

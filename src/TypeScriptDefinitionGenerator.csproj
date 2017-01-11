@@ -52,7 +52,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CreationListener.cs" />
+    <Compile Include="Constants.cs" />
+    <Compile Include="Generator\GenerationService.cs" />
     <Compile Include="Generator\DtsGenerator.cs" />
     <Compile Include="DtsPackage.cs" />
     <Compile Include="DtsPackage1.cs">
@@ -253,6 +254,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="website.pkgdef">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Resources\Icon.png">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
