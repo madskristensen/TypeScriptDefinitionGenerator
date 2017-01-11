@@ -27,11 +27,14 @@ namespace TypeScriptDefinitionGenerator
                     var list = IntellisenseParser.ProcessFile(item);
                     var dts = IntellisenseWriter.WriteTypeScript(list);
 
+                    Telemetry.TrackOperation("FileGenerated");
+
                     return Encoding.UTF8.GetBytes(dts);
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.Write(ex);
+                    Telemetry.TrackOperation("FileGenerated", Microsoft.VisualStudio.Telemetry.TelemetryResult.Failure);
+                    Telemetry.TrackException("FileGenerated", ex);
                 }
             }
 

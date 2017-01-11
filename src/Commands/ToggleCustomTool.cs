@@ -36,7 +36,7 @@ namespace TypeScriptDefinitionGenerator
 
             _item = dte.SelectedItems?.Item(1)?.ProjectItem;
 
-            if (_item == null)
+            if (_item == null || _item.ContainingProject == null || _item.ContainingProject.IsKind(ProjectTypes.DOTNET_Core, ProjectTypes.WEBSITE_PROJECT))
                 return;
 
             var fileName = _item.FileNames[1];
@@ -72,10 +72,12 @@ namespace TypeScriptDefinitionGenerator
             if (synOn)
             {
                 _item.Properties.Item("CustomTool").Value = "";
+                Telemetry.TrackUserTask("EnableGeneration");
             }
             else
             {
                 _item.Properties.Item("CustomTool").Value = DtsGenerator.Name;
+                Telemetry.TrackUserTask("DisabledGeneration");
             }
         }
     }
