@@ -22,10 +22,17 @@ namespace TypeScriptDefinitionGenerator
 
             if (item != null)
             {
-                var list = IntellisenseParser.ProcessFile(item);
-                var dts = IntellisenseWriter.WriteTypeScript(list);
+                try
+                {
+                    var list = IntellisenseParser.ProcessFile(item);
+                    var dts = IntellisenseWriter.WriteTypeScript(list);
 
-                return Encoding.UTF8.GetBytes(dts);
+                    return Encoding.UTF8.GetBytes(dts);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.Write(ex);
+                }
             }
 
             return new byte[0];

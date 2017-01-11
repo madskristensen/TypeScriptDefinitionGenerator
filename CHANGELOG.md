@@ -3,6 +3,7 @@
 - [x] Single File Generator
 - [x] Command to toggle custom tool
 - [x] Update readme file with screenshots etc.
+- [ ] Test on VB files
 
 Features that have a checkmark are complete and available for
 download in the

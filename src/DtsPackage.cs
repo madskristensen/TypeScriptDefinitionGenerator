@@ -16,9 +16,9 @@ namespace TypeScriptDefinitionGenerator
     [ProvideAutoLoad(PackageGuids.UIContextRuleString)]
     [ProvideUIContextRule(PackageGuids.UIContextRuleString,
         name: "Auto load",
-        expression: "cs | vb | csct | vbct",
-        termNames: new[] { "cs", "vb", "csct", "vbct" },
-        termValues: new[] { "HierSingleSelectionName:.cs$", "HierSingleSelectionName:.vb$", "ActiveEditorContentType:csharp", "ActiveEditorContentType:basic" })]
+        expression: "cs | vb",
+        termNames: new[] { "cs", "vb" },
+        termValues: new[] { "HierSingleSelectionName:.cs$", "HierSingleSelectionName:.vb$" })]
     public sealed class DtsPackage : AsyncPackage
     {
         public static Options Options
