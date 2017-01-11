@@ -3,7 +3,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/l61k3vbx5jsf6o0i?svg=true)](https://ci.appveyor.com/project/madskristensen/typescriptdefinitiongenerator)
 
 <!-- Update the VS Gallery link after you upload the VSIX-->
-Download this extension from the [VS Gallery](https://visualstudiogallery.msdn.microsoft.com/[GuidFromGallery])
+Download this extension from the [Marketplace](https://marketplace.visualstudio.com/vsgallery/7ef40759-8802-4b48-b4d6-3c250fb4916e)
 or get the [CI build](http://vsixgallery.com/extension/cad7b20b-4b83-4ca6-bf24-ca36a494241c/).
 
 ---------------------------------------
