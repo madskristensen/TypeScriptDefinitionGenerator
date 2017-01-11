@@ -35,45 +35,15 @@ namespace TypeScriptDefinitionGenerator
         {
             get { return TypeScriptName != "any"; }
         }
-
-        public string JavaScriptName
-        {
-            get { return GetTargetName(this.CodeName, true); }
-        }
-
+        
         public string TypeScriptName
         {
             get
             {
                 if (IsDictionary) return GetKVPTypes();
-                return GetTargetName(this.CodeName, false);
+                return GetTargetName(CodeName, false);
             }
         }
-
-        public string JavaScripLiteral
-        {
-            get
-            {
-                if (IsArray)
-                    return "[]";
-                switch (JavaScriptName)
-                {
-                    case "Number":
-                        return "0";
-                    case "String":
-                        return "''";
-                    case "Boolean":
-                        return "false";
-                    case "Array":
-                        return "[]";
-                    case "Object":
-                        return "{ }";
-                    default:
-                        return "new " + JavaScriptName + "()";
-                }
-            }
-        }
-
 
         private string GetTargetName(string codeName, bool js)
         {

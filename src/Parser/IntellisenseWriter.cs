@@ -12,26 +12,64 @@ namespace TypeScriptDefinitionGenerator
 {
     internal static class IntellisenseWriter
     {
-        public static string Write(IEnumerable<IntellisenseObject> objects)
+        private static readonly Regex _whitespaceTrimmer = new Regex(@"^\s+|\s+$|\s*[\r\n]+\s*", RegexOptions.Compiled);
+
+        public static string WriteTypeScript(IEnumerable<IntellisenseObject> objects)
         {
-            StringBuilder sb = new StringBuilder();
-            WriteTypeScript(objects, sb);
-            return sb.ToString();
-        }
+            var sb = new StringBuilder();
 
-        public async static Task WriteAsync(IEnumerable<IntellisenseObject> objects, string file)
-        {
-            StringBuilder sb = new StringBuilder();
-
-            if (Path.GetExtension(file).Equals(".ts", StringComparison.OrdinalIgnoreCase))
-                WriteTypeScript(objects, sb, file);
-            else
-                WriteJavaScript(objects, sb);
-
-            using (var writer  = new StreamWriter(file))
+            foreach (var ns in objects.GroupBy(o => o.Namespace))
             {
-                await writer.WriteAsync(sb.ToString());
+                sb.AppendFormat("declare module {0} {{\r\n", ns.Key);
+
+                foreach (IntellisenseObject io in ns)
+                {
+                    if (!string.IsNullOrEmpty(io.Summary))
+                        sb.AppendLine("\t/** " + _whitespaceTrimmer.Replace(io.Summary, "") + " */");
+
+                    if (io.IsEnum)
+                    {
+                        sb.AppendLine("\tconst enum " + CamelCaseClassName(io.Name) + " {");
+
+                        foreach (var p in io.Properties)
+                        {
+                            WriteTypeScriptComment(p, sb);
+
+                            if (p.InitExpression != null)
+                            {
+                                sb.AppendLine("\t\t" + CamelCaseEnumValue(p.Name) + " = " + CleanEnumInitValue(p.InitExpression) + ",");
+                            }
+                            else
+                            {
+                                sb.AppendLine("\t\t" + CamelCaseEnumValue(p.Name) + ",");
+                            }
+                        }
+
+                        sb.AppendLine("\t}");
+                    }
+                    else
+                    {
+                        sb.Append("\tinterface ").Append(CamelCaseClassName(io.Name)).Append(" ");
+
+                        if (!string.IsNullOrEmpty(io.BaseName))
+                        {
+                            sb.Append("extends ");
+
+                            if (!string.IsNullOrEmpty(io.BaseNamespace) && io.BaseNamespace != io.Namespace)
+                                sb.Append(io.BaseNamespace).Append(".");
+
+                            sb.Append(io.BaseName).Append(" ");
+                        }
+
+                        WriteTSInterfaceDefinition(sb, "\t", io.Properties);
+                        sb.AppendLine();
+                    }
+                }
+
+                sb.AppendLine("}");
             }
+
+            return sb.ToString();
         }
 
         private static string CamelCaseEnumValue(string name)
@@ -79,148 +117,11 @@ namespace TypeScriptDefinitionGenerator
             return "0";
         }
 
-        private static readonly Regex whitespaceTrimmer = new Regex(@"^\s+|\s+$|\s*[\r\n]+\s*", RegexOptions.Compiled);
-
-        internal static void WriteJavaScript(IEnumerable<IntellisenseObject> objects, StringBuilder sb)
-        {
-            bool hasInheritDefinition = false;
-
-            sb.AppendLine("var server = server || {};");
-
-            foreach (IntellisenseObject io in objects)
-            {
-                if (io.IsEnum) continue;
-
-                string comment = io.Summary ?? "The " + io.Name + " class as defined in " + io.FullName;
-
-                comment = whitespaceTrimmer.Replace(comment, " ");
-
-                sb.Append("/// <summary>").Append(SecurityElement.Escape(comment)).Append("</summary>").AppendLine();
-                sb.Append("server.").Append(CamelCaseClassName(io.Name)).Append(" = function() {").AppendLine();
-
-                foreach (var p in io.Properties)
-                {
-                    string type = p.Type.JavaScriptName + (p.Type.IsArray ? "[]" : "");
-                    var propertyName = CamelCasePropertyName(p.Name);
-
-                    comment = p.Summary ?? "The " + p.Name + " property as defined in " + io.FullName;
-                    comment = whitespaceTrimmer.Replace(comment, " ");
-
-                    sb.Append("\t/// <field name=\"").Append(propertyName).Append("\" type=\"").Append(type).Append("\">")
-                      .Append(SecurityElement.Escape(comment)).Append("</field>").AppendLine();
-                    sb.Append("\tthis.").Append(propertyName).Append(" = ").Append(p.Type.JavaScripLiteral + ";")
-                      .AppendLine();
-                }
-
-                sb.AppendLine("};").AppendLine();
-
-                if (!string.IsNullOrEmpty(io.BaseName))
-                {
-                    if (!hasInheritDefinition)
-                    {
-                        sb.Insert(0, GetInheritMethod());
-
-                        hasInheritDefinition = true;
-                    }
-
-                    sb.Append("inherits(").Append(io.Name).Append(", ").Append(io.BaseName).Append(");");
-                }
-            }
-        }
-
-        private static string GetInheritMethod()
-        {
-            // Taken from http://blog.slaks.net/2013-09-03/traditional-inheritance-in-javascript/
-
-            return @"function inherits(subConstructor, superConstructor) {
-    var proto = Object.create(
-        superConstructor.prototype,
-        {
-            ""constructor"": {
-                configurable: true,
-                enumerable: false,
-                writable: true,
-                value: subConstructor
-            }
-        }
-    );
-    Object.defineProperty(subConstructor, ""prototype"",  {
-        configurable: true,
-        enumerable: false,
-        writable: true,
-        value: proto
-    });
-}" + Environment.NewLine + Environment.NewLine;
-        }
-
-        internal static void WriteTypeScript(IEnumerable<IntellisenseObject> objects, StringBuilder sb, string file = null)
-        {
-            //if (WESettings.Instance.CodeGen.AddTypeScriptReferencePath && !string.IsNullOrEmpty(file))
-            //{
-            //    var references = objects.SelectMany(io => io.References.Where(r => r != file)).Distinct().ToList();
-
-            //    foreach (var reference in references)
-            //        sb.AppendFormat("/// <reference path=\"{0}\" />\r\n", FileHelpers.RelativePath(file, reference));
-
-            //    if (references.Count > 0) sb.AppendLine();
-            //}
-
-            foreach (var ns in objects.GroupBy(o => o.Namespace))
-            {
-                sb.AppendFormat("declare module {0} {{\r\n", ns.Key);
-
-                foreach (IntellisenseObject io in ns)
-                {
-                    if (!string.IsNullOrEmpty(io.Summary))
-                        sb.AppendLine("\t/** " + whitespaceTrimmer.Replace(io.Summary, "") + " */");
-
-                    if (io.IsEnum)
-                    {
-                        sb.AppendLine("\tconst enum " + CamelCaseClassName(io.Name) + " {");
-
-                        foreach (var p in io.Properties)
-                        {
-                            WriteTypeScriptComment(p, sb);
-
-                            if (p.InitExpression != null)
-                            {
-                                sb.AppendLine("\t\t" + CamelCaseEnumValue(p.Name) + " = " + CleanEnumInitValue(p.InitExpression) + ",");
-                            }
-                            else
-                            {
-                                sb.AppendLine("\t\t" + CamelCaseEnumValue(p.Name) + ",");
-                            }
-                        }
-
-                        sb.AppendLine("\t}");
-                    }
-                    else
-                    {
-                        sb.Append("\tinterface ").Append(CamelCaseClassName(io.Name)).Append(" ");
-
-                        if (!string.IsNullOrEmpty(io.BaseName))
-                        {
-                            sb.Append("extends ");
-
-                            if (!string.IsNullOrEmpty(io.BaseNamespace) && io.BaseNamespace != io.Namespace)
-                                sb.Append(io.BaseNamespace).Append(".");
-
-                            sb.Append(io.BaseName).Append(" ");
-                        }
-
-                        WriteTSInterfaceDefinition(sb, "\t", io.Properties);
-                        sb.AppendLine();
-                    }
-                }
-
-                sb.AppendLine("}");
-            }
-        }
 
         private static void WriteTypeScriptComment(IntellisenseProperty p, StringBuilder sb)
         {
             if (string.IsNullOrEmpty(p.Summary)) return;
-            sb.AppendLine("\t\t/** " + whitespaceTrimmer.Replace(p.Summary, "") + " */");
+            sb.AppendLine("\t\t/** " + _whitespaceTrimmer.Replace(p.Summary, "") + " */");
         }
 
         private static void WriteTSInterfaceDefinition(StringBuilder sb, string prefix,

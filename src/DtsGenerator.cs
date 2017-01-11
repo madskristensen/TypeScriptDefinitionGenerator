@@ -9,7 +9,7 @@ namespace TypeScriptDefinitionGenerator
     public sealed class DtsGenerator : BaseCodeGeneratorWithSite
     {
         public const string Name = nameof(DtsGenerator);
-        public const string Desription = "Automatically generates the .d.ts file based on the C#/VB model class.";
+        public const string Description = "Automatically generates the .d.ts file based on the C#/VB model class.";
 
         public override string GetDefaultExtension()
         {
@@ -23,7 +23,7 @@ namespace TypeScriptDefinitionGenerator
             if (item != null)
             {
                 var list = IntellisenseParser.ProcessFile(item);
-                var dts = IntellisenseWriter.Write(list);
+                var dts = IntellisenseWriter.WriteTypeScript(list);
 
                 return Encoding.UTF8.GetBytes(dts);
             }

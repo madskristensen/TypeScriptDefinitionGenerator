@@ -1,7 +1,6 @@
 # TypeScript Definition Generator
 
-<!-- Replace this badge with your own-->
-[![Build status](https://ci.appveyor.com/api/projects/status/hv6uyc059rqbc6fj?svg=true)](https://ci.appveyor.com/project/madskristensen/extensibilitytools)
+[![Build status](https://ci.appveyor.com/api/projects/status/l61k3vbx5jsf6o0i?svg=true)](https://ci.appveyor.com/project/madskristensen/typescriptdefinitiongenerator)
 
 <!-- Update the VS Gallery link after you upload the VSIX-->
 Download this extension from the [VS Gallery](https://visualstudiogallery.msdn.microsoft.com/[GuidFromGallery])
@@ -13,20 +12,8 @@ Creates and synchronizes TypeScript Definition files (d.ts) from C#/VB model cla
 
 See the [change log](CHANGELOG.md) for changes and road map.
 
-## Features
-
-- Feature 1
-- Feature 2
-  - Sub feature
-
-### Feature 1
-Describe feature 1. Add screenshots/code samples etc.
-
-### Feature 2
-Describe feature 2. Add screenshots/code samples etc.
-
-#### Sub feature
-Describe sub feature. Add screenshots/code samples etc.
+## Generate d.ts file from C#/VB
+coming soon...
 
 ## Contribute
 Check out the [contribution guidelines](.github/CONTRIBUTING.md)

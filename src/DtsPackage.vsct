@@ -3,7 +3,6 @@
 
   <Extern href="stdidcmd.h"/>
   <Extern href="vsshlids.h"/>
-  <Include href="KnownImageIds.vsct"/>
 
   <Commands package="guidDtsPackage">
     <Groups>
@@ -15,11 +14,9 @@
     <Buttons>
       <Button guid="guidDtsPackageCmdSet" id="ToggleCustomToolId" priority="0x0100" type="Button">
         <Parent guid="guidDtsPackageCmdSet" id="MyMenuGroup" />
-        <Icon guid="ImageCatalogGuid" id="TSFileNode" />
-        <CommandFlag>IconIsMoniker</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
-          <ButtonText>Generate d.ts file</ButtonText>
+          <ButtonText>Generate TypeScript Definition</ButtonText>
         </Strings>
       </Button>
     </Buttons>

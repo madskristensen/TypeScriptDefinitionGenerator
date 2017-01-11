@@ -4,6 +4,9 @@
     <Identity Id="cad7b20b-4b83-4ca6-bf24-ca36a494241c" Version="0.1" Language="en-US" Publisher="Mads Kristensen" />
     <DisplayName>TypeScript Definition Generator</DisplayName>
     <Description xml:space="preserve">Creates and synchronizes TypeScript Definition files (d.ts) from C#/VB model classes</Description>
+    <MoreInfo>https://github.com/madskristensen/TypeScriptDefinitionGenerator</MoreInfo>
+    <License>Resources\LICENSE</License>
+    <ReleaseNotes>https://github.com/madskristensen/TypeScriptDefinitionGenerator/blob/master/CHANGELOG.md</ReleaseNotes>
     <Icon>Resources\Icon.png</Icon>
     <PreviewImage>Resources\Icon.png</PreviewImage>
     <Tags>typescript, d.ts</Tags>

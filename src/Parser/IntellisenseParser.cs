@@ -1,13 +1,12 @@
-﻿using System;
+﻿using EnvDTE;
+using EnvDTE80;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using EnvDTE;
-using EnvDTE80;
-using Microsoft.VisualStudio.Utilities;
 
 namespace TypeScriptDefinitionGenerator
 {
@@ -20,7 +19,6 @@ namespace TypeScriptDefinitionGenerator
 
         internal static class Ext
         {
-            public const string JavaScript = ".js";
             public const string TypeScript = ".d.ts";
         }
 
@@ -309,9 +307,10 @@ namespace TypeScriptDefinitionGenerator
 
         private static string TryToGuessFullName(string typeName)
         {
-            Type primitiveType;
-            if (_knownPrimitiveTypes.TryGetValue(typeName, out primitiveType)) return primitiveType.FullName;
-            else return typeName;
+            if (_knownPrimitiveTypes.TryGetValue(typeName, out var primitiveType))
+                return primitiveType.FullName;
+
+            return typeName;
         }
 
         private static bool IsPrimitive(CodeTypeRef codeTypeRef)
@@ -347,15 +346,17 @@ namespace TypeScriptDefinitionGenerator
             { "DataMember", new [] { "Name" } },
             { "JsonProperty", new [] { "", "PropertyName" } }
         };
+
         private static string GetName(CodeProperty property)
         {
             foreach (CodeAttribute attr in property.Attributes)
             {
                 var className = Path.GetExtension(attr.Name);
-                if (string.IsNullOrEmpty(className)) className = attr.Name;
 
-                string[] argumentNames;
-                if (!nameAttributes.TryGetValue(className, out argumentNames))
+                if (string.IsNullOrEmpty(className))
+                    className = attr.Name;
+
+                if (!nameAttributes.TryGetValue(className, out var argumentNames))
                     continue;
 
                 var value = attr.Children.OfType<CodeAttributeArgument>().FirstOrDefault(a => argumentNames.Contains(a.Name));

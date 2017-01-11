@@ -10,9 +10,9 @@ namespace TypeScriptDefinitionGenerator
     [Guid(PackageGuids.guidDtsPackageString)]
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
-    [ProvideOptionPage(typeof(Options), "Text Editor\\JavaScript/TypeScript", "Generate d.ts", 101, 102, true, new[] { "d.ts" }, ProvidesLocalizedCategoryName = false)]
+    [ProvideLanguageEditorOptionPage(typeof(Options), "TypeScript", null, "Generate d.ts", null, new[] { "d.ts" })]
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [ProvideCodeGenerator(typeof(DtsGenerator), DtsGenerator.Name, DtsGenerator.Desription, true)]
+    [ProvideCodeGenerator(typeof(DtsGenerator), DtsGenerator.Name, DtsGenerator.Description, true)]
     [ProvideAutoLoad(PackageGuids.UIContextRuleString)]
     [ProvideUIContextRule(PackageGuids.UIContextRuleString,
         name: "Auto load",
