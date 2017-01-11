@@ -2,7 +2,7 @@
 
 - [x] Single File Generator
 - [x] Command to toggle custom tool
-- [ ] Update readme file with screenshots etc.
+- [x] Update readme file with screenshots etc.
 
 Features that have a checkmark are complete and available for
 download in the

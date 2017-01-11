@@ -12,8 +12,45 @@ Creates and synchronizes TypeScript Definition files (d.ts) from C#/VB model cla
 
 See the [change log](CHANGELOG.md) for changes and road map.
 
+## From C# to .d.ts file
+This extension will automatically generate .d.ts files from any C#/VB file you specify. It will turn the following C# class into a TypeScript interface.
+
+```csharp
+class Customer
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public IEnumerable<string> Tags { get; set; }
+}
+```
+
+Becomes this .d.ts file:
+
+```typescript
+declare module server {
+	interface customer {
+		id: number;
+		name: string;
+		tags: string[];
+	}
+}
+```
+
 ## Generate d.ts file from C#/VB
-coming soon...
+To generate a .d.ts file, right-click any .cs or .vb file and select **Generate TypeScript Definition**.
+
+![Context menu](art/context-menu.png)
+
+A .d.ts file is created and nested under the parent C#/VB file.
+
+![Nested file](art/nested-file.png)
+
+Every time the C#/VB file is modified and saved, the content of the .d.ts file is updated to reflect the changes.
+
+## Settings
+Configure this extension from the **Tools -> Options** dialog.
+
+![Settings](art/settings.png)
 
 ## Contribute
 Check out the [contribution guidelines](.github/CONTRIBUTING.md)
