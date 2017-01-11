@@ -35,6 +35,8 @@ declare module server {
 }
 ```
 
+The generated .d.ts file can then be consumed from your own TypeScript files by referencing `server.<typeName>` interfaces.
+
 ## Generate d.ts file from C#/VB
 To generate a .d.ts file, right-click any .cs or .vb file and select **Generate TypeScript Definition**.
 
