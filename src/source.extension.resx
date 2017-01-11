@@ -121,7 +121,7 @@
     <value>TypeScript Definition Generator</value>
   </data>
   <data name="112" xml:space="preserve">
-    <value>Creates and synchronizes TypeScript Definition files (d.ts) from C#/VB model classes. Works on all .NET project types</value>
+    <value>Creates and synchronizes TypeScript Definition files (d.ts) from C#/VB model classes to build strongly typed web application where the server- and client-side models are in sync. Works on all .NET project types</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="400" type="System.Resources.ResXFileRef, System.Windows.Forms">
