@@ -11,6 +11,8 @@ Creates and synchronizes TypeScript Definition files (d.ts) from C#/VB model cla
 
 See the [change log](CHANGELOG.md) for changes and road map.
 
+For Visual Studio 2015 support, install [Web Essentials 2015](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.WebEssentials20153)
+
 ## From C# to .d.ts file
 This extension will automatically generate .d.ts files from any C#/VB file you specify. It will turn the following C# class into a TypeScript interface.
 
