@@ -39,8 +39,13 @@ namespace TypeScriptDefinitionGenerator
             if (e.FileActionType != FileActionTypes.ContentSavedToDisk)
                 return;
 
-            DtsPackage.EnsurePackageLoad();
-            CreateDtsFile(_item);
+            string fileName = Path.ChangeExtension(e.FilePath, ".d.ts");
+
+            if (File.Exists(fileName))
+            {
+                DtsPackage.EnsurePackageLoad();
+                CreateDtsFile(_item);
+            }
         }
 
         public static string ConvertToTypeScript(ProjectItem sourceItem)
