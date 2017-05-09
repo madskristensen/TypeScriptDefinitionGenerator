@@ -17,6 +17,7 @@ namespace TypeScriptDefinitionGenerator
             return Constants.FileExtension;
         }
 
+
         protected override byte[] GenerateCode(string inputFileName, string inputFileContent)
         {
             var item = Dte.Solution.FindProjectItem(inputFileName);
