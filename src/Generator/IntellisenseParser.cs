@@ -83,7 +83,7 @@ namespace TypeScriptDefinitionGenerator
                 var references = new HashSet<string>();
 
                 // Process Inheritence.
-                if (baseClass != null && !underProcess.Contains(baseClass) && !HasIntellisense(baseClass.ProjectItem, Constants.FileExtension, references))
+                if (baseClass != null && !underProcess.Contains(baseClass) && !HasIntellisense(baseClass.ProjectItem, references))
                 {
                     list.Last().UpdateReferences(references);
                     underProcess.Add(baseClass);
@@ -244,8 +244,8 @@ namespace TypeScriptDefinitionGenerator
                     effectiveTypeRef.TypeKind == vsCMTypeRef.vsCMTypeRefCodeType &&
                     effectiveTypeRef.CodeType.InfoLocation == vsCMInfoLocation.vsCMInfoLocationProject
                     ?
-                        (codeClass != null && HasIntellisense(codeClass.ProjectItem, Constants.FileExtension, references) ? (GetNamespace(codeClass) + "." + GetClassName(codeClass)) : null) ??
-                        (codeEnum != null && HasIntellisense(codeEnum.ProjectItem, Constants.FileExtension, references) ? (GetNamespace(codeEnum) + "." + codeEnum.Name) : null)
+                        (codeClass != null && HasIntellisense(codeClass.ProjectItem, references) ? (GetNamespace(codeClass) + "." + GetClassName(codeClass)) : null) ??
+                        (codeEnum != null && HasIntellisense(codeEnum.ProjectItem, references) ? (GetNamespace(codeEnum) + "." + codeEnum.Name) : null)
                     : null
             };
 
@@ -324,11 +324,11 @@ namespace TypeScriptDefinitionGenerator
             return false;
         }
 
-        private static bool HasIntellisense(ProjectItem projectItem, string ext, HashSet<string> references)
+        private static bool HasIntellisense(ProjectItem projectItem, HashSet<string> references)
         {
             for (short i = 0; i < projectItem.FileCount; i++)
             {
-                var fileName = projectItem.FileNames[i] + ext;
+                var fileName = GenerationService.GenerateFileName(projectItem.FileNames[i]);
 
                 if (File.Exists(fileName))
                 {

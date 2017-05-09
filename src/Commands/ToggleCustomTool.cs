@@ -65,7 +65,7 @@ namespace TypeScriptDefinitionGenerator
             {
                 if (_item.ContainingProject.IsKind(ProjectTypes.DOTNET_Core, ProjectTypes.ASPNET_5, ProjectTypes.WEBSITE_PROJECT))
                 {
-                    string dtsFile = Path.ChangeExtension(_item.FileNames[1], Constants.FileExtension);
+                    string dtsFile = GenerationService.GenerateFileName(_item.FileNames[1]);
                     button.Checked = File.Exists(dtsFile);
                 }
                 else
@@ -82,7 +82,7 @@ namespace TypeScriptDefinitionGenerator
             // .NET Core and Website projects
             if (_item.ContainingProject.IsKind(ProjectTypes.DOTNET_Core, ProjectTypes.ASPNET_5, ProjectTypes.WEBSITE_PROJECT))
             {
-                string dtsFile = Path.ChangeExtension(_item.FileNames[1], Constants.FileExtension);
+                string dtsFile = GenerationService.GenerateFileName(_item.FileNames[1]);
                 bool synOn = File.Exists(dtsFile);
 
                 if (synOn)

@@ -39,7 +39,7 @@ namespace TypeScriptDefinitionGenerator
             if (e.FileActionType != FileActionTypes.ContentSavedToDisk)
                 return;
 
-            string fileName = Path.ChangeExtension(e.FilePath, ".d.ts");
+            string fileName = GenerationService.GenerateFileName(e.FilePath);
 
             if (File.Exists(fileName))
             {
@@ -62,10 +62,15 @@ namespace TypeScriptDefinitionGenerator
             }
         }
 
+        public static string GenerateFileName(string sourceFile)
+        {
+            return Path.ChangeExtension(sourceFile, Constants.FileExtension);
+        }
+
         public static void CreateDtsFile(ProjectItem sourceItem)
         {
             string sourceFile = sourceItem.FileNames[1];
-            string dtsFile = Path.ChangeExtension(sourceFile, Constants.FileExtension);
+            string dtsFile = GenerationService.GenerateFileName(sourceFile);
             string dts = ConvertToTypeScript(sourceItem);
 
             VSHelpers.CheckFileOutOfSourceControl(dtsFile);
