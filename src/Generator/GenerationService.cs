@@ -64,7 +64,14 @@ namespace TypeScriptDefinitionGenerator
 
         public static string GenerateFileName(string sourceFile)
         {
-            return Path.ChangeExtension(sourceFile, Constants.FileExtension);
+            if (DtsPackage.Options.WebEssentials2015)
+            {
+                return sourceFile + Constants.FileExtension;
+            }
+            else
+            {
+                return Path.ChangeExtension(sourceFile, Constants.FileExtension);
+            }
         }
 
         public static void CreateDtsFile(ProjectItem sourceItem)

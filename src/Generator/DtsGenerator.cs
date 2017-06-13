@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TextTemplating.VSHost;
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -11,17 +12,24 @@ namespace TypeScriptDefinitionGenerator
         public const string Name = nameof(DtsGenerator);
         public const string Description = "Automatically generates the .d.ts file based on the C#/VB model class.";
 
+        string originalExt { get; set; }
 
         public override string GetDefaultExtension()
         {
-            return Constants.FileExtension;
+            if (DtsPackage.Options.WebEssentials2015)
+            {
+                return this.originalExt + Constants.FileExtension;
+            }
+            else
+            {
+                return Constants.FileExtension;
+            }
         }
-
 
         protected override byte[] GenerateCode(string inputFileName, string inputFileContent)
         {
             var item = Dte.Solution.FindProjectItem(inputFileName);
-
+            this.originalExt = Path.GetExtension(inputFileName);
             if (item != null)
             {
                 try
