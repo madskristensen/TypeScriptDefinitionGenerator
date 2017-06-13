@@ -19,5 +19,11 @@ namespace TypeScriptDefinitionGenerator
         [DisplayName("Camel case type names")]
         [DefaultValue(true)]
         public bool CamelCaseTypeNames { get; set; } = true;
+
+
+        [Category("Compatibilty")]
+        [DisplayName("Web Esentials 2015 file names")]
+        [DefaultValue(true)]
+        public bool WebEssentials2015 { get; set; } = true;
     }
 }
