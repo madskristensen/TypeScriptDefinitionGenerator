@@ -81,13 +81,19 @@ namespace TypeScriptDefinitionGenerator
                 ProcessClass(cc, baseClass, list, underProcess);
 
                 var references = new HashSet<string>();
-
-                // Process Inheritence.
-                if (baseClass != null && !underProcess.Contains(baseClass) && !HasIntellisense(baseClass.ProjectItem, references))
+                try
                 {
-                    list.Last().UpdateReferences(references);
-                    underProcess.Add(baseClass);
-                    list.AddRange(ProcessFile(baseClass.ProjectItem, underProcess));
+                    // Process Inheritence.
+                    if (baseClass != null && !underProcess.Contains(baseClass) && !HasIntellisense(baseClass.ProjectItem, references))
+                    {
+                        list.Last().UpdateReferences(references);
+                        underProcess.Add(baseClass);
+                        list.AddRange(ProcessFile(baseClass.ProjectItem, underProcess));
+                    }
+                }
+                catch
+                {
+
                 }
             }
         }
@@ -163,14 +169,35 @@ namespace TypeScriptDefinitionGenerator
         private static IEnumerable<IntellisenseProperty> GetProperties(CodeElements props, HashSet<string> traversedTypes, HashSet<string> references = null)
         {
             return from p in props.OfType<CodeProperty>()
-                   where !p.Attributes.Cast<CodeAttribute>().Any(a => a.Name == "IgnoreDataMember")
-                   where p.Getter != null && !p.Getter.IsShared && p.Getter.Access == vsCMAccess.vsCMAccessPublic
+                   where !p.Attributes.Cast<CodeAttribute>().Any(a => "System.Runtime.Serialization.IgnoreDataMemberAttribute" == a.FullName || "Newtonsoft.Json.JsonIgnoreAttribute" == a.FullName)
+                   where vsCMAccess.vsCMAccessPublic == p.Access && p.Getter != null && !p.Getter.IsShared && IsPublic(p.Getter)
                    select new IntellisenseProperty
                    {
                        Name = GetName(p),
                        Type = GetType(p.Parent, p.Type, traversedTypes, references),
                        Summary = GetSummary(p)
                    };
+        }
+
+        private static bool IsPublic(CodeFunction cf)
+        {
+            var fun = cf.Kind;
+
+            bool retVal = false;
+            try
+            {
+                retVal = cf.Access == vsCMAccess.vsCMAccessPublic;
+            }
+            catch (COMException)
+            {
+                CodeProperty cp = cf.Parent as CodeProperty;
+                if (cp != null)
+                {
+                    retVal = cp.Access == vsCMAccess.vsCMAccessPublic;
+                }
+
+            }
+            return retVal;
         }
 
         private static string GetClassName(CodeClass cc)
@@ -231,32 +258,43 @@ namespace TypeScriptDefinitionGenerator
                 isDictionary = codeTypeRef.AsString.StartsWith("System.Collections.Generic.Dictionary", StringComparison.Ordinal);
             }
 
-            var codeClass = effectiveTypeRef.CodeType as CodeClass2;
-            var codeEnum = effectiveTypeRef.CodeType as CodeEnum;
-            var isPrimitive = IsPrimitive(effectiveTypeRef);
+            string typeName = effectiveTypeRef.AsFullName;
 
-            var result = new IntellisenseType
+            try
             {
-                IsArray = !isDictionary && (isArray || isCollection),
-                IsDictionary = isDictionary,
-                CodeName = effectiveTypeRef.AsString,
-                ClientSideReferenceName =
-                    effectiveTypeRef.TypeKind == vsCMTypeRef.vsCMTypeRefCodeType &&
-                    effectiveTypeRef.CodeType.InfoLocation == vsCMInfoLocation.vsCMInfoLocationProject
-                    ?
-                        (codeClass != null && HasIntellisense(codeClass.ProjectItem, references) ? (GetNamespace(codeClass) + "." + GetClassName(codeClass)) : null) ??
-                        (codeEnum != null && HasIntellisense(codeEnum.ProjectItem, references) ? (GetNamespace(codeEnum) + "." + codeEnum.Name) : null)
-                    : null
-            };
 
-            if (!isPrimitive && codeClass != null && !traversedTypes.Contains(effectiveTypeRef.CodeType.FullName) && !isCollection)
-            {
-                traversedTypes.Add(effectiveTypeRef.CodeType.FullName);
-                result.Shape = GetProperties(effectiveTypeRef.CodeType.Members, traversedTypes, references).ToList();
-                traversedTypes.Remove(effectiveTypeRef.CodeType.FullName);
+                var codeClass = effectiveTypeRef.CodeType as CodeClass2;
+                var codeEnum = effectiveTypeRef.CodeType as CodeEnum;
+                var isPrimitive = IsPrimitive(effectiveTypeRef);
+
+                var result = new IntellisenseType
+                {
+                    IsArray = !isDictionary && (isArray || isCollection),
+                    IsDictionary = isDictionary,
+                    CodeName = effectiveTypeRef.AsString,
+                    ClientSideReferenceName =
+                        effectiveTypeRef.TypeKind == vsCMTypeRef.vsCMTypeRefCodeType &&
+                        effectiveTypeRef.CodeType.InfoLocation == vsCMInfoLocation.vsCMInfoLocationProject
+                        ?
+                            (codeClass != null && HasIntellisense(codeClass.ProjectItem, references) ? (GetNamespace(codeClass) + "." + GetClassName(codeClass)) : null) ??
+                            (codeEnum != null && HasIntellisense(codeEnum.ProjectItem, references) ? (GetNamespace(codeEnum) + "." + codeEnum.Name) : null)
+                        : null
+                };
+
+                if (!isPrimitive && codeClass != null && !traversedTypes.Contains(effectiveTypeRef.CodeType.FullName) && !isCollection)
+                {
+                    traversedTypes.Add(effectiveTypeRef.CodeType.FullName);
+                    result.Shape = GetProperties(effectiveTypeRef.CodeType.Members, traversedTypes, references).ToList();
+                    traversedTypes.Remove(effectiveTypeRef.CodeType.FullName);
+                }
+
+                return result;
             }
-
-            return result;
+            catch (InvalidCastException)
+            {
+                VSHelpers.WriteOnOutputWindow(string.Format("ERROR - Cannot find definition for {0}", typeName));
+                throw new ArgumentException(string.Format("Cannot find definition of {0}", typeName));
+            }
         }
 
         private static CodeTypeRef TryToGuessGenericArgument(CodeClass rootElement, CodeTypeRef codeTypeRef)
@@ -387,10 +425,14 @@ namespace TypeScriptDefinitionGenerator
 
             try
             {
-                string summary = XElement.Parse(xmlComment)
+                string summary = "";
+                if (!string.IsNullOrWhiteSpace(xmlComment))
+                {
+                    summary = XElement.Parse(xmlComment)
                                .Descendants("summary")
                                .Select(x => x.Value)
                                .FirstOrDefault();
+                }
                 if (!string.IsNullOrEmpty(summary)) return summary.Trim();
                 if (!string.IsNullOrWhiteSpace(inlineComment)) return inlineComment.Trim();
                 return null;
