@@ -11,6 +11,9 @@ download in the
 These are the changes to each version that has been released
 on the official Visual Studio extension gallery.
 
+## 1.1
+
+- [x] Option for using producing &lt;filename&gt;.cs.d.ts
 
 ## 1.0
 
