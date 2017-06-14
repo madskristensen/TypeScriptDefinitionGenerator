@@ -18,6 +18,8 @@ namespace TypeScriptDefinitionGenerator
 
         public bool IsDictionary { get; set; }
 
+        public bool IsOptional { get { return CodeName.EndsWith("?"); } }
+
         /// <summary>
         /// If this type is itself part of a source code file that has a .d.ts definitions file attached,
         /// this property will contain the full (namespace-qualified) client-side name of that type.
