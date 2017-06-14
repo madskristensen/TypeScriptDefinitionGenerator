@@ -52,11 +52,14 @@ namespace TypeScriptDefinitionGenerator
         {
             try
             {
+                VSHelpers.WriteOnOutputWindow(string.Format("{0} - Started", sourceItem.Name));
                 var list = IntellisenseParser.ProcessFile(sourceItem);
+                VSHelpers.WriteOnOutputWindow(string.Format("{0} - Completed", sourceItem.Name));
                 return IntellisenseWriter.WriteTypeScript(list);
             }
             catch (Exception ex)
             {
+                VSHelpers.WriteOnOutputWindow(string.Format("{0} - Failure", sourceItem.Name));
                 Telemetry.TrackException("ParseFailure", ex);
                 return null;
             }
@@ -64,7 +67,14 @@ namespace TypeScriptDefinitionGenerator
 
         public static string GenerateFileName(string sourceFile)
         {
-            return Path.ChangeExtension(sourceFile, Constants.FileExtension);
+            if (DtsPackage.Options.WebEssentials2015)
+            {
+                return sourceFile + Constants.FileExtension;
+            }
+            else
+            {
+                return Path.ChangeExtension(sourceFile, Constants.FileExtension);
+            }
         }
 
         public static void CreateDtsFile(ProjectItem sourceItem)
