@@ -22,7 +22,7 @@ namespace TypeScriptDefinitionGenerator
         public static void TrackException(string name, Exception exception)
         {
             string actualName = name.Replace(" ", "_");
-            TelemetryService.DefaultSession.PostFault(actualName, exception.Message, exception);
+            TelemetryService.DefaultSession.PostFault(_namespace + actualName, exception.Message, exception);
         }
     }
 }
