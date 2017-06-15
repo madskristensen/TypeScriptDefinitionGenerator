@@ -169,7 +169,7 @@ namespace TypeScriptDefinitionGenerator
         private static IEnumerable<IntellisenseProperty> GetProperties(CodeElements props, HashSet<string> traversedTypes, HashSet<string> references = null)
         {
             return from p in props.OfType<CodeProperty>()
-                   where !p.Attributes.Cast<CodeAttribute>().Any(a => "System.Runtime.Serialization.IgnoreDataMemberAttribute" == a.FullName || "Newtonsoft.Json.JsonIgnoreAttribute" == a.FullName)
+                   where !p.Attributes.Cast<CodeAttribute>().Any(HasIgnoreAttribute)
                    where vsCMAccess.vsCMAccessPublic == p.Access && p.Getter != null && !p.Getter.IsShared && IsPublic(p.Getter)
                    select new IntellisenseProperty
                    {
@@ -177,6 +177,13 @@ namespace TypeScriptDefinitionGenerator
                        Type = GetType(p.Parent, p.Type, traversedTypes, references),
                        Summary = GetSummary(p)
                    };
+        }
+
+        private static bool HasIgnoreAttribute(CodeAttribute attribute)
+        {
+            return attribute.FullName == "System.Runtime.Serialization.IgnoreDataMemberAttribute" ||
+                   attribute.FullName == "Newtonsoft.Json.JsonIgnoreAttribute" ||
+                   attribute.FullName == "System.Web.Script.Serialization.ScriptIgnoreAttribute";
         }
 
         private static bool IsPublic(CodeFunction cf)
