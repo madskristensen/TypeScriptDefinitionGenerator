@@ -49,7 +49,8 @@ namespace TypeScriptDefinitionGenerator
                     }
                     else
                     {
-                        sb.Append("\tinterface ").Append(CamelCaseClassName(io.Name)).Append(" ");
+                        string type = DtsPackage.Options.ClassInsteadOfInterface ? "\tclass " : "\tinterface ";
+                        sb.Append(type).Append(CamelCaseClassName(io.Name)).Append(" ");
 
                         if (!string.IsNullOrEmpty(io.BaseName))
                         {

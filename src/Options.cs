@@ -20,6 +20,12 @@ namespace TypeScriptDefinitionGenerator
         [DefaultValue(true)]
         public bool CamelCaseTypeNames { get; set; } = true;
 
+        [Category("Settings")]
+        [DisplayName("Class instead of Interface")]
+        [Description("Controls whether to generate a class or an interface: default is an Interface")]
+        [DefaultValue(false)]
+        public bool ClassInsteadOfInterface { get; set; } = false;
+
 
         [Category("Compatibilty")]
         [DisplayName("Web Esentials 2015 file names")]
