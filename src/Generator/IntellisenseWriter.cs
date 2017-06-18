@@ -58,7 +58,7 @@ namespace TypeScriptDefinitionGenerator
                             if (!string.IsNullOrEmpty(io.BaseNamespace) && io.BaseNamespace != io.Namespace)
                                 sb.Append(io.BaseNamespace).Append(".");
 
-                            sb.Append(io.BaseName).Append(" ");
+                            sb.Append(CamelCaseClassName(io.BaseName)).Append(" ");
                         }
 
                         WriteTSInterfaceDefinition(sb, "\t", io.Properties);
