@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using TypeScriptDefinitionGenerator.Helpers;
 
 namespace TypeScriptDefinitionGenerator
 {
@@ -29,7 +26,7 @@ namespace TypeScriptDefinitionGenerator
 
                     if (io.IsEnum)
                     {
-                        sb.AppendLine("\tconst enum " + CamelCaseClassName(io.Name) + " {");
+                        sb.AppendLine("\tconst enum " + Utility.CamelCaseClassName(io.Name) + " {");
 
                         foreach (var p in io.Properties)
                         {
@@ -37,11 +34,11 @@ namespace TypeScriptDefinitionGenerator
 
                             if (p.InitExpression != null)
                             {
-                                sb.AppendLine("\t\t" + CamelCaseEnumValue(p.Name) + " = " + CleanEnumInitValue(p.InitExpression) + ",");
+                                sb.AppendLine("\t\t" + Utility.CamelCaseEnumValue(p.Name) + " = " + CleanEnumInitValue(p.InitExpression) + ",");
                             }
                             else
                             {
-                                sb.AppendLine("\t\t" + CamelCaseEnumValue(p.Name) + ",");
+                                sb.AppendLine("\t\t" + Utility.CamelCaseEnumValue(p.Name) + ",");
                             }
                         }
 
@@ -50,7 +47,7 @@ namespace TypeScriptDefinitionGenerator
                     else
                     {
                         string type = DtsPackage.Options.ClassInsteadOfInterface ? "\tclass " : "\tinterface ";
-                        sb.Append(type).Append(CamelCaseClassName(io.Name)).Append(" ");
+                        sb.Append(type).Append(Utility.CamelCaseClassName(io.Name)).Append(" ");
 
                         if (!string.IsNullOrEmpty(io.BaseName))
                         {
@@ -59,7 +56,7 @@ namespace TypeScriptDefinitionGenerator
                             if (!string.IsNullOrEmpty(io.BaseNamespace) && io.BaseNamespace != io.Namespace)
                                 sb.Append(io.BaseNamespace).Append(".");
 
-                            sb.Append(CamelCaseClassName(io.BaseName)).Append(" ");
+                            sb.Append(Utility.CamelCaseClassName(io.BaseName)).Append(" ");
                         }
 
                         WriteTSInterfaceDefinition(sb, "\t", io.Properties);
@@ -71,42 +68,6 @@ namespace TypeScriptDefinitionGenerator
             }
 
             return sb.ToString();
-        }
-
-        private static string CamelCaseEnumValue(string name)
-        {
-            if (DtsPackage.Options.CamelCaseEnumerationValues)
-            {
-                name = CamelCase(name);
-            }
-            return name;
-        }
-
-        private static string CamelCasePropertyName(string name)
-        {
-            if (DtsPackage.Options.CamelCasePropertyNames)
-            {
-                name = CamelCase(name);
-            }
-            return name;
-        }
-
-        private static string CamelCaseClassName(string name)
-        {
-            if (DtsPackage.Options.CamelCaseTypeNames)
-            {
-                name = CamelCase(name);
-            }
-            return name;
-        }
-
-        private static string CamelCase(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                return name;
-            }
-            return name[0].ToString(CultureInfo.CurrentCulture).ToLower(CultureInfo.CurrentCulture) + name.Substring(1);
         }
 
         private static string CleanEnumInitValue(string value)
@@ -133,7 +94,7 @@ namespace TypeScriptDefinitionGenerator
             foreach (var p in props)
             {
                 WriteTypeScriptComment(p, sb);
-                sb.AppendFormat("{0}\t{1}: ", prefix, CamelCasePropertyName(p.NameWithOption));
+                sb.AppendFormat("{0}\t{1}: ", prefix, Utility.CamelCasePropertyName(p.NameWithOption));
 
                 if (p.Type.IsKnownType) sb.Append(p.Type.TypeScriptName);
                 else
