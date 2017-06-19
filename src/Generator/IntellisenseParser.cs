@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using TypeScriptDefinitionGenerator.Helpers;
 
 namespace TypeScriptDefinitionGenerator
 {
@@ -283,8 +284,8 @@ namespace TypeScriptDefinitionGenerator
                         effectiveTypeRef.TypeKind == vsCMTypeRef.vsCMTypeRefCodeType &&
                         effectiveTypeRef.CodeType.InfoLocation == vsCMInfoLocation.vsCMInfoLocationProject
                         ?
-                            (codeClass != null && HasIntellisense(codeClass.ProjectItem, references) ? (GetNamespace(codeClass) + "." + GetClassName(codeClass)) : null) ??
-                            (codeEnum != null && HasIntellisense(codeEnum.ProjectItem, references) ? (GetNamespace(codeEnum) + "." + codeEnum.Name) : null)
+                            (codeClass != null && HasIntellisense(codeClass.ProjectItem, references) ? (GetNamespace(codeClass) + "." + Utility.CamelCaseClassName(GetClassName(codeClass))) : null) ??
+                            (codeEnum != null && HasIntellisense(codeEnum.ProjectItem, references) ? (GetNamespace(codeEnum) + "." + Utility.CamelCaseClassName(codeEnum.Name)) : null)
                         : null
                 };
 
