@@ -5,6 +5,8 @@ namespace TypeScriptDefinitionGenerator
 {
     public class Options : DialogPage
     {
+        private string _defaultModuleName;
+
         [Category("Casing")]
         [DisplayName("Camel case enum values")]
         [DefaultValue(true)]
@@ -19,6 +21,25 @@ namespace TypeScriptDefinitionGenerator
         [DisplayName("Camel case type names")]
         [DefaultValue(true)]
         public bool CamelCaseTypeNames { get; set; } = true;
+
+        [Category("Settings")]
+        [DisplayName("Default Module name")]
+        [Description("Set the top-level module name for the generated .d.ts file. Default is \"server\"")]
+        public string DefaultModuleName
+        {
+            get { return _defaultModuleName; }
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    _defaultModuleName = value;
+                }
+                else
+                {
+                    _defaultModuleName = "server";
+                }
+            }
+        }
 
         [Category("Settings")]
         [DisplayName("Class instead of Interface")]
