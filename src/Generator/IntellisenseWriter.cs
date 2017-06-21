@@ -17,7 +17,10 @@ namespace TypeScriptDefinitionGenerator
 
             foreach (var ns in objects.GroupBy(o => o.Namespace))
             {
-                sb.AppendFormat("declare module {0} {{\r\n", ns.Key);
+                if (!DtsPackage.Options.GlobalScope)
+                {
+                    sb.AppendFormat("declare module {0} {{\r\n", ns.Key);
+                }
 
                 foreach (IntellisenseObject io in ns)
                 {
@@ -64,7 +67,10 @@ namespace TypeScriptDefinitionGenerator
                     }
                 }
 
-                sb.AppendLine("}");
+                if (!DtsPackage.Options.GlobalScope)
+                {
+                    sb.AppendLine("}");
+                }
             }
 
             return sb.ToString();

@@ -5,7 +5,7 @@ namespace TypeScriptDefinitionGenerator
 {
     public class Options : DialogPage
     {
-        private string _defaultModuleName;
+        private string _defaultModuleName = "server";
 
         [Category("Casing")]
         [DisplayName("Camel case enum values")]
@@ -46,6 +46,12 @@ namespace TypeScriptDefinitionGenerator
         [Description("Controls whether to generate a class or an interface: default is an Interface")]
         [DefaultValue(false)]
         public bool ClassInsteadOfInterface { get; set; } = false;
+
+        [Category("Settings")]
+        [DisplayName("Generate in global scope")]
+        [Description("Controls whether to generate types in Global scope or wrapped in a module")]
+        [DefaultValue(false)]
+        public bool GlobalScope { get; set; } = false;
 
 
         [Category("Compatibilty")]
