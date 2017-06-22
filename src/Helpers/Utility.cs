@@ -6,7 +6,7 @@ namespace TypeScriptDefinitionGenerator.Helpers
     {
         public static string CamelCaseClassName(string name)
         {
-            if (DtsPackage.Options.CamelCaseTypeNames)
+            if (Options.CamelCaseTypeNames)
             {
                 name = CamelCase(name);
             }
@@ -15,7 +15,7 @@ namespace TypeScriptDefinitionGenerator.Helpers
 
         public static string CamelCaseEnumValue(string name)
         {
-            if (DtsPackage.Options.CamelCaseEnumerationValues)
+            if (Options.CamelCaseEnumerationValues)
             {
                 name = CamelCase(name);
             }
@@ -24,7 +24,7 @@ namespace TypeScriptDefinitionGenerator.Helpers
 
         public static string CamelCasePropertyName(string name)
         {
-            if (DtsPackage.Options.CamelCasePropertyNames)
+            if (Options.CamelCasePropertyNames)
             {
                 name = CamelCase(name);
             }

@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TextTemplating.VSHost;
+﻿using EnvDTE;
+using Microsoft.VisualStudio.TextTemplating.VSHost;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -16,7 +17,7 @@ namespace TypeScriptDefinitionGenerator
 
         public override string GetDefaultExtension()
         {
-            if (DtsPackage.Options.WebEssentials2015)
+            if (Options.WebEssentials2015)
             {
                 return this.originalExt + Constants.FileExtension;
             }
@@ -28,13 +29,13 @@ namespace TypeScriptDefinitionGenerator
 
         protected override byte[] GenerateCode(string inputFileName, string inputFileContent)
         {
-            var item = Dte.Solution.FindProjectItem(inputFileName);
+            ProjectItem item = Dte.Solution.FindProjectItem(inputFileName);
             this.originalExt = Path.GetExtension(inputFileName);
             if (item != null)
             {
                 try
                 {
-                    var dts = GenerationService.ConvertToTypeScript(item);
+                    string dts = GenerationService.ConvertToTypeScript(item);
 
                     Telemetry.TrackOperation("FileGenerated");
 

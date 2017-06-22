@@ -38,7 +38,8 @@ namespace TypeScriptDefinitionGenerator
         {
             if (e.FileActionType != FileActionTypes.ContentSavedToDisk)
                 return;
-
+            _item = VSHelpers.GetProjectItem(e.FilePath);
+            Options.ReadOptionOverrides(_item, false);
             string fileName = GenerationService.GenerateFileName(e.FilePath);
 
             if (File.Exists(fileName))
@@ -52,6 +53,7 @@ namespace TypeScriptDefinitionGenerator
         {
             try
             {
+                Options.ReadOptionOverrides(sourceItem);
                 VSHelpers.WriteOnOutputWindow(string.Format("{0} - Started", sourceItem.Name));
                 var list = IntellisenseParser.ProcessFile(sourceItem);
                 VSHelpers.WriteOnOutputWindow(string.Format("{0} - Completed", sourceItem.Name));
@@ -67,7 +69,7 @@ namespace TypeScriptDefinitionGenerator
 
         public static string GenerateFileName(string sourceFile)
         {
-            if (DtsPackage.Options.WebEssentials2015)
+            if (Options.WebEssentials2015)
             {
                 return sourceFile + Constants.FileExtension;
             }

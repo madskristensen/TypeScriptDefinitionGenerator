@@ -13,7 +13,7 @@ namespace TypeScriptDefinitionGenerator
 {
     public static class IntellisenseParser
     {
-        private static string DefaultModuleName = DtsPackage.Options.DefaultModuleName;
+        private static string DefaultModuleName = Options.DefaultModuleName;
         private const string ModuleNameAttributeName = "TypeScriptModule";
         private static readonly Regex IsNumber = new Regex("^[0-9a-fx]+[ul]{0,2}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static Project _project;
