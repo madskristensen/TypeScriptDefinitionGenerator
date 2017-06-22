@@ -38,7 +38,8 @@ namespace TypeScriptDefinitionGenerator
         {
             if (e.FileActionType != FileActionTypes.ContentSavedToDisk)
                 return;
-            Options.ReadOptionOverrides(_item);
+            _item = VSHelpers.GetProjectItem(e.FilePath);
+            Options.ReadOptionOverrides(_item, false);
             string fileName = GenerationService.GenerateFileName(e.FilePath);
 
             if (File.Exists(fileName))

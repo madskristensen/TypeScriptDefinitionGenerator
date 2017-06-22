@@ -1,6 +1,7 @@
 ﻿using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json;
+using System;
 using System.ComponentModel;
 using System.IO;
 
@@ -8,74 +9,63 @@ namespace TypeScriptDefinitionGenerator
 {
     public class OptionsDialogPage : DialogPage
     {
-        private string _defaultModuleName = "server";
+        internal const bool _defCamelCaseEnumerationValues = true;
+        internal const bool _defCamelCasePropertyNames = true;
+        internal const bool _defCamelCaseTypeNames = true;
+        internal const bool _defClassInsteadOfInterface = false;
+        internal const bool _defGlobalScope = false;
+        internal const bool _defWebEssentials2015 = true;
+        internal const string _defModuleName = "server";
 
         [Category("Casing")]
         [DisplayName("Camel case enum values")]
-        [DefaultValue(true)]
-        public bool CamelCaseEnumerationValues { get; set; } = true;
+        [DefaultValue(_defCamelCaseEnumerationValues)]
+        public bool CamelCaseEnumerationValues { get; set; } = _defCamelCaseEnumerationValues;
 
         [Category("Casing")]
         [DisplayName("Camel case property names")]
-        [DefaultValue(true)]
-        public bool CamelCasePropertyNames { get; set; } = true;
+        [DefaultValue(_defCamelCasePropertyNames)]
+        public bool CamelCasePropertyNames { get; set; } = _defCamelCasePropertyNames;
 
         [Category("Casing")]
         [DisplayName("Camel case type names")]
-        [DefaultValue(true)]
-        public bool CamelCaseTypeNames { get; set; } = true;
+        [DefaultValue(_defCamelCaseTypeNames)]
+        public bool CamelCaseTypeNames { get; set; } = _defCamelCaseTypeNames;
 
         [Category("Settings")]
         [DisplayName("Default Module name")]
         [Description("Set the top-level module name for the generated .d.ts file. Default is \"server\"")]
-        public string DefaultModuleName
-        {
-            get { return _defaultModuleName; }
-            set
-            {
-                if (!string.IsNullOrEmpty(value))
-                {
-                    _defaultModuleName = value;
-                }
-                else
-                {
-                    _defaultModuleName = "server";
-                }
-            }
-        }
+        public string DefaultModuleName { get; set; } = _defModuleName;
 
         [Category("Settings")]
         [DisplayName("Class instead of Interface")]
         [Description("Controls whether to generate a class or an interface: default is an Interface")]
-        [DefaultValue(false)]
-        public bool ClassInsteadOfInterface { get; set; } = false;
+        [DefaultValue(_defClassInsteadOfInterface)]
+        public bool ClassInsteadOfInterface { get; set; } = _defClassInsteadOfInterface;
 
         [Category("Settings")]
         [DisplayName("Generate in global scope")]
         [Description("Controls whether to generate types in Global scope or wrapped in a module")]
-        [DefaultValue(false)]
-        public bool GlobalScope { get; set; } = false;
+        [DefaultValue(_defGlobalScope)]
+        public bool GlobalScope { get; set; } = _defGlobalScope;
 
 
         [Category("Compatibilty")]
         [DisplayName("Web Esentials 2015 file names")]
         [Description("Web Essentials 2015 format is <filename>.cs.d.ts instead of <filename>.d.ts")]
-        [DefaultValue(true)]
-        public bool WebEssentials2015 { get; set; } = true;
+        [DefaultValue(_defWebEssentials2015)]
+        public bool WebEssentials2015 { get; set; } = _defWebEssentials2015;
     }
 
     public class Options
     {
+        const string OVERRIDE_FILE_NAME = "tsdefgen.json";
         static OptionsOverride overrides { get; set; } = null;
         static public bool CamelCaseEnumerationValues
         {
             get
             {
-                if (overrides != null && overrides.CamelCaseEnumerationValues != null)
-                {
-                    return overrides.CamelCaseEnumerationValues.Value;
-                }
-                return DtsPackage.Options.CamelCaseEnumerationValues;
+                return overrides != null ? overrides.CamelCaseEnumerationValues : DtsPackage.Options.CamelCaseEnumerationValues;
             }
         }
 
@@ -83,11 +73,7 @@ namespace TypeScriptDefinitionGenerator
         {
             get
             {
-                if (overrides != null && overrides.CamelCasePropertyNames != null)
-                {
-                    return overrides.CamelCasePropertyNames.Value;
-                }
-                return DtsPackage.Options.CamelCasePropertyNames;
+                return overrides != null ? overrides.CamelCasePropertyNames : DtsPackage.Options.CamelCasePropertyNames;
             }
         }
 
@@ -95,11 +81,7 @@ namespace TypeScriptDefinitionGenerator
         {
             get
             {
-                if (overrides != null && overrides.CamelCaseTypeNames != null)
-                {
-                    return overrides.CamelCaseTypeNames.Value;
-                }
-                return DtsPackage.Options.CamelCaseTypeNames;
+                return overrides != null ? overrides.CamelCaseTypeNames : DtsPackage.Options.CamelCaseTypeNames;
             }
         }
 
@@ -107,11 +89,7 @@ namespace TypeScriptDefinitionGenerator
         {
             get
             {
-                if (overrides != null && overrides.DefaultModuleName != null)
-                {
-                    return overrides.DefaultModuleName;
-                }
-                return DtsPackage.Options.DefaultModuleName;
+                return overrides != null ? overrides.DefaultModuleName : DtsPackage.Options.DefaultModuleName;
             }
         }
 
@@ -119,11 +97,7 @@ namespace TypeScriptDefinitionGenerator
         {
             get
             {
-                if (overrides != null && overrides.ClassInsteadOfInterface != null)
-                {
-                    return overrides.ClassInsteadOfInterface.Value;
-                }
-                return DtsPackage.Options.ClassInsteadOfInterface;
+                return overrides != null ? overrides.ClassInsteadOfInterface : DtsPackage.Options.ClassInsteadOfInterface;
             }
         }
 
@@ -131,11 +105,7 @@ namespace TypeScriptDefinitionGenerator
         {
             get
             {
-                if (overrides != null && overrides.GlobalScope != null)
-                {
-                    return overrides.GlobalScope.Value;
-                }
-                return DtsPackage.Options.GlobalScope;
+                return overrides != null ? overrides.GlobalScope : DtsPackage.Options.GlobalScope;
             }
         }
 
@@ -143,33 +113,59 @@ namespace TypeScriptDefinitionGenerator
         {
             get
             {
-                if (overrides != null && overrides.WebEssentials2015 != null)
-                {
-                    return overrides.WebEssentials2015.Value;
-                }
-                return DtsPackage.Options.WebEssentials2015;
+                return overrides != null ? overrides.WebEssentials2015 : DtsPackage.Options.WebEssentials2015;
             }
         }
-        public static void ReadOptionOverrides(ProjectItem sourceItem)
+
+        public static void ReadOptionOverrides(ProjectItem sourceItem, bool display = true)
         {
-            overrides = null;
             Project proj = sourceItem.ContainingProject;
+
+            string jsonName = "";
+
             foreach (ProjectItem item in proj.ProjectItems)
             {
-                if (item.Name.ToLower() == "tsdefgen.json")
+                if (item.Name.ToLower() == OVERRIDE_FILE_NAME.ToLower())
                 {
-                    try
-                    {
-                        overrides = JsonConvert.DeserializeObject<OptionsOverride>(File.ReadAllText(item.FileNames[0]));
-                    }
-                    catch (Newtonsoft.Json.JsonReaderException e)
-                    {
-                        VSHelpers.WriteOnOutputWindow(e.Message);
-                        throw;
-                    }
-
+                    jsonName = item.FileNames[0];
                     break;
                 }
+            }
+
+            if (!string.IsNullOrEmpty(jsonName))
+            {
+                // it has been modified since last read - so read again
+                try
+                {
+                    overrides = JsonConvert.DeserializeObject<OptionsOverride>(File.ReadAllText(jsonName));
+                    if (display)
+                    {
+                        VSHelpers.WriteOnOutputWindow(string.Format("Override file processed: {0}", jsonName));
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine(string.Format("Override file processed: {0}", jsonName));
+                    }
+                }
+                catch (Exception e) when (e is Newtonsoft.Json.JsonReaderException || e is Newtonsoft.Json.JsonSerializationException)
+                {
+                    overrides = null; // incase the read fails
+                    VSHelpers.WriteOnOutputWindow(string.Format("Error in Override file: {0}", jsonName));
+                    VSHelpers.WriteOnOutputWindow(e.Message);
+                    throw;
+                }
+            }
+            else
+            {
+                if (display)
+                {
+                    VSHelpers.WriteOnOutputWindow("Using Global Settings");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("Using Global Settings");
+                }
+                overrides = null;
             }
         }
 
@@ -177,19 +173,26 @@ namespace TypeScriptDefinitionGenerator
 
     internal class OptionsOverride
     {
-        public bool? CamelCaseEnumerationValues { get; set; }
+        //        [JsonRequired]
+        public bool CamelCaseEnumerationValues { get; set; } = OptionsDialogPage._defCamelCaseEnumerationValues;
 
-        public bool? CamelCasePropertyNames { get; set; }
+        //        [JsonRequired]
+        public bool CamelCasePropertyNames { get; set; } = OptionsDialogPage._defCamelCasePropertyNames;
 
-        public bool? CamelCaseTypeNames { get; set; }
+        //        [JsonRequired]
+        public bool CamelCaseTypeNames { get; set; } = OptionsDialogPage._defCamelCaseTypeNames;
 
-        public string DefaultModuleName { get; set; }
+        //        [JsonRequired]
+        public string DefaultModuleName { get; set; } = OptionsDialogPage._defModuleName;
 
-        public bool? ClassInsteadOfInterface { get; set; }
+        //        [JsonRequired]
+        public bool ClassInsteadOfInterface { get; set; } = OptionsDialogPage._defClassInsteadOfInterface;
 
-        public bool? GlobalScope { get; set; }
+        //        [JsonRequired]
+        public bool GlobalScope { get; set; } = OptionsDialogPage._defGlobalScope;
 
-        public bool? WebEssentials2015 { get; set; }
+        //        [JsonRequired]
+        public bool WebEssentials2015 { get; set; } = OptionsDialogPage._defWebEssentials2015;
 
     }
 
