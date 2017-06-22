@@ -158,7 +158,15 @@ namespace TypeScriptDefinitionGenerator
             {
                 if (item.Name.ToLower() == "tsdefgen.json")
                 {
-                    overrides = JsonConvert.DeserializeObject<OptionsOverride>(File.ReadAllText(item.FileNames[0]));
+                    try
+                    {
+                        overrides = JsonConvert.DeserializeObject<OptionsOverride>(File.ReadAllText(item.FileNames[0]));
+                    }
+                    catch (Newtonsoft.Json.JsonReaderException e)
+                    {
+                        VSHelpers.WriteOnOutputWindow(e.Message);
+                        throw;
+                    }
 
                     break;
                 }
