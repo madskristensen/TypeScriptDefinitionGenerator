@@ -17,7 +17,7 @@ namespace TypeScriptDefinitionGenerator
 
             foreach (var ns in objects.GroupBy(o => o.Namespace))
             {
-                if (!DtsPackage.Options.GlobalScope)
+                if (!Options.GlobalScope)
                 {
                     sb.AppendFormat("declare module {0} {{\r\n", ns.Key);
                 }
@@ -49,7 +49,7 @@ namespace TypeScriptDefinitionGenerator
                     }
                     else
                     {
-                        string type = DtsPackage.Options.ClassInsteadOfInterface ? "\tclass " : "\tinterface ";
+                        string type = Options.ClassInsteadOfInterface ? "\tclass " : "\tinterface ";
                         sb.Append(type).Append(Utility.CamelCaseClassName(io.Name)).Append(" ");
 
                         if (!string.IsNullOrEmpty(io.BaseName))
@@ -67,7 +67,7 @@ namespace TypeScriptDefinitionGenerator
                     }
                 }
 
-                if (!DtsPackage.Options.GlobalScope)
+                if (!Options.GlobalScope)
                 {
                     sb.AppendLine("}");
                 }

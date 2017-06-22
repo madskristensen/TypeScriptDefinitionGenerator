@@ -13,7 +13,7 @@ namespace TypeScriptDefinitionGenerator
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [ProvideLanguageEditorOptionPage(typeof(Options), "TypeScript", null, "Generate d.ts", null, new[] { "d.ts" })]
+    [ProvideLanguageEditorOptionPage(typeof(OptionsDialogPage), "TypeScript", null, "Generate d.ts", null, new[] { "d.ts" })]
     [ProvideCodeGenerator(typeof(DtsGenerator), DtsGenerator.Name, DtsGenerator.Description, true)]
     [ProvideAutoLoad(PackageGuids.UIContextRuleString)]
     [ProvideUIContextRule(PackageGuids.UIContextRuleString,
@@ -23,7 +23,7 @@ namespace TypeScriptDefinitionGenerator
         termValues: new[] { "HierSingleSelectionName:.cs$", "HierSingleSelectionName:.vb$" })]
     public sealed class DtsPackage : AsyncPackage
     {
-        public static Options Options
+        public static OptionsDialogPage Options
         {
             get;
             private set;
@@ -40,7 +40,7 @@ namespace TypeScriptDefinitionGenerator
 
         protected override async Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
-            Options = (Options)GetDialogPage(typeof(Options));
+            Options = (OptionsDialogPage)GetDialogPage(typeof(OptionsDialogPage));
 
             await ToggleCustomTool.InitializeAsync(this);
         }

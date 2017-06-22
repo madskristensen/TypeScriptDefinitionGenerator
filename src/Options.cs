@@ -1,9 +1,12 @@
-﻿using Microsoft.VisualStudio.Shell;
+﻿using EnvDTE;
+using Microsoft.VisualStudio.Shell;
+using Newtonsoft.Json;
 using System.ComponentModel;
+using System.IO;
 
 namespace TypeScriptDefinitionGenerator
 {
-    public class Options : DialogPage
+    public class OptionsDialogPage : DialogPage
     {
         private string _defaultModuleName = "server";
 
@@ -60,4 +63,126 @@ namespace TypeScriptDefinitionGenerator
         [DefaultValue(true)]
         public bool WebEssentials2015 { get; set; } = true;
     }
+
+    public class Options
+    {
+        static OptionsOverride overrides { get; set; } = null;
+        static public bool CamelCaseEnumerationValues
+        {
+            get
+            {
+                if (overrides != null && overrides.CamelCaseEnumerationValues != null)
+                {
+                    return overrides.CamelCaseEnumerationValues.Value;
+                }
+                return DtsPackage.Options.CamelCaseEnumerationValues;
+            }
+        }
+
+        static public bool CamelCasePropertyNames
+        {
+            get
+            {
+                if (overrides != null && overrides.CamelCasePropertyNames != null)
+                {
+                    return overrides.CamelCasePropertyNames.Value;
+                }
+                return DtsPackage.Options.CamelCasePropertyNames;
+            }
+        }
+
+        static public bool CamelCaseTypeNames
+        {
+            get
+            {
+                if (overrides != null && overrides.CamelCaseTypeNames != null)
+                {
+                    return overrides.CamelCaseTypeNames.Value;
+                }
+                return DtsPackage.Options.CamelCaseTypeNames;
+            }
+        }
+
+        static public string DefaultModuleName
+        {
+            get
+            {
+                if (overrides != null && overrides.DefaultModuleName != null)
+                {
+                    return overrides.DefaultModuleName;
+                }
+                return DtsPackage.Options.DefaultModuleName;
+            }
+        }
+
+        static public bool ClassInsteadOfInterface
+        {
+            get
+            {
+                if (overrides != null && overrides.ClassInsteadOfInterface != null)
+                {
+                    return overrides.ClassInsteadOfInterface.Value;
+                }
+                return DtsPackage.Options.ClassInsteadOfInterface;
+            }
+        }
+
+        static public bool GlobalScope
+        {
+            get
+            {
+                if (overrides != null && overrides.GlobalScope != null)
+                {
+                    return overrides.GlobalScope.Value;
+                }
+                return DtsPackage.Options.GlobalScope;
+            }
+        }
+
+        static public bool WebEssentials2015
+        {
+            get
+            {
+                if (overrides != null && overrides.WebEssentials2015 != null)
+                {
+                    return overrides.WebEssentials2015.Value;
+                }
+                return DtsPackage.Options.WebEssentials2015;
+            }
+        }
+        public static void ReadOptionOverrides(ProjectItem sourceItem)
+        {
+            overrides = null;
+            Project proj = sourceItem.ContainingProject;
+            foreach (ProjectItem item in proj.ProjectItems)
+            {
+                if (item.Name.ToLower() == "tsdefgen.json")
+                {
+                    overrides = JsonConvert.DeserializeObject<OptionsOverride>(File.ReadAllText(item.FileNames[0]));
+
+                    break;
+                }
+            }
+        }
+
+    }
+
+    internal class OptionsOverride
+    {
+        public bool? CamelCaseEnumerationValues { get; set; }
+
+        public bool? CamelCasePropertyNames { get; set; }
+
+        public bool? CamelCaseTypeNames { get; set; }
+
+        public string DefaultModuleName { get; set; }
+
+        public bool? ClassInsteadOfInterface { get; set; }
+
+        public bool? GlobalScope { get; set; }
+
+        public bool? WebEssentials2015 { get; set; }
+
+    }
+
 }
