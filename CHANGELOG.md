@@ -11,6 +11,11 @@ download in the
 These are the changes to each version that has been released
 on the official Visual Studio extension gallery.
 
+## 1.2
+
+- [x] Support for Visual Studio 2019
+- [x] Converted to AsyncPackage with background load
+
 ## 1.1
 
 - [x] Option for using producing &lt;filename&gt;.cs.d.ts
