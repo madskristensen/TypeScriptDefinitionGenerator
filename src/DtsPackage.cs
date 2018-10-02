@@ -10,12 +10,12 @@ using Tasks = System.Threading.Tasks;
 namespace TypeScriptDefinitionGenerator
 {
     [Guid(PackageGuids.guidDtsPackageString)]
-    [PackageRegistration(UseManagedResourcesOnly = true)]
+    [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideLanguageEditorOptionPage(typeof(OptionsDialogPage), "TypeScript", null, "Generate d.ts", null, new[] { "d.ts" })]
     [ProvideCodeGenerator(typeof(DtsGenerator), DtsGenerator.Name, DtsGenerator.Description, true)]
-    [ProvideAutoLoad(PackageGuids.UIContextRuleString)]
+    [ProvideAutoLoad(PackageGuids.UIContextRuleString, PackageAutoLoadFlags.BackgroundLoad)]
     [ProvideUIContextRule(PackageGuids.UIContextRuleString,
         name: "Auto load",
         expression: "cs | vb",
@@ -40,6 +40,8 @@ namespace TypeScriptDefinitionGenerator
 
         protected override async Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
+            await JoinableTaskFactory.SwitchToMainThreadAsync();
+
             Options = (OptionsDialogPage)GetDialogPage(typeof(OptionsDialogPage));
 
             await ToggleCustomTool.InitializeAsync(this);
