@@ -263,7 +263,8 @@ namespace TypeScriptDefinitionGenerator
 
             if (isCollection)
             {
-                isDictionary = codeTypeRef.AsString.StartsWith("System.Collections.Generic.Dictionary", StringComparison.Ordinal);
+                isDictionary = codeTypeRef.AsString.StartsWith("System.Collections.Generic.Dictionary", StringComparison.Ordinal)
+                            || codeTypeRef.AsString.StartsWith("System.Collections.Generic.IDictionary", StringComparison.Ordinal);
             }
 
             string typeName = effectiveTypeRef.AsFullName;
