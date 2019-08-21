@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+
 using TypeScriptDefinitionGenerator.Helpers;
 
 namespace TypeScriptDefinitionGenerator
@@ -29,23 +30,33 @@ namespace TypeScriptDefinitionGenerator
 
                     if (io.IsEnum)
                     {
-                        sb.AppendLine("\tconst enum " + Utility.CamelCaseClassName(io.Name) + " {");
-
-                        foreach (var p in io.Properties)
+                        if (!Options.StringInsteadOfEnum)
                         {
-                            WriteTypeScriptComment(p, sb);
+                            sb.AppendLine("\tconst enum " + Utility.CamelCaseClassName(io.Name) + " {");
 
-                            if (p.InitExpression != null)
+                            foreach (var p in io.Properties)
                             {
-                                sb.AppendLine("\t\t" + Utility.CamelCaseEnumValue(p.Name) + " = " + CleanEnumInitValue(p.InitExpression) + ",");
+                                WriteTypeScriptComment(p, sb);
+
+                                if (p.InitExpression != null)
+                                {
+                                    sb.AppendLine("\t\t" + Utility.CamelCaseEnumValue(p.Name) + " = " + CleanEnumInitValue(p.InitExpression) + ",");
+                                }
+                                else
+                                {
+                                    sb.AppendLine("\t\t" + Utility.CamelCaseEnumValue(p.Name) + ",");
+                                }
                             }
-                            else
-                            {
-                                sb.AppendLine("\t\t" + Utility.CamelCaseEnumValue(p.Name) + ",");
-                            }
+
+                            sb.AppendLine("\t}");
                         }
+                        else
+                        {
+                            var propsNames = io.Properties.Select(p => "'" + Utility.CamelCaseEnumValue(p.Name) + "'");
+                            var propsString = string.Join(" | ", propsNames);
 
-                        sb.AppendLine("\t}");
+                            sb.AppendLine("\ttype " + Utility.CamelCaseClassName(io.Name) + " = " + propsString + ";");
+                        }
                     }
                     else
                     {

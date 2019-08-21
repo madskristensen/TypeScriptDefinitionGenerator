@@ -13,6 +13,7 @@ namespace TypeScriptDefinitionGenerator
         internal const bool _defCamelCasePropertyNames = true;
         internal const bool _defCamelCaseTypeNames = true;
         internal const bool _defClassInsteadOfInterface = false;
+        internal const bool _defStringInsteadOfEnum = false;
         internal const bool _defGlobalScope = false;
         internal const bool _defWebEssentials2015 = true;
         internal const string _defModuleName = "server";
@@ -42,6 +43,12 @@ namespace TypeScriptDefinitionGenerator
         [Description("Controls whether to generate a class or an interface: default is an Interface")]
         [DefaultValue(_defClassInsteadOfInterface)]
         public bool ClassInsteadOfInterface { get; set; } = _defClassInsteadOfInterface;
+
+        [Category("Settings")]
+        [DisplayName("String enumeration instead of Enum")]
+        [Description("Controls whether to generate an enum or a string ('a' | 'b' | 'c'): default is an Interface")]
+        [DefaultValue(_defStringInsteadOfEnum)]
+        public bool StringInsteadOfEnum { get; set; } = _defStringInsteadOfEnum;
 
         [Category("Settings")]
         [DisplayName("Generate in global scope")]
@@ -98,6 +105,14 @@ namespace TypeScriptDefinitionGenerator
             get
             {
                 return overrides != null ? overrides.ClassInsteadOfInterface : DtsPackage.Options.ClassInsteadOfInterface;
+            }
+        }
+
+        static public bool StringInsteadOfEnum
+        {
+            get
+            {
+                return overrides != null ? overrides.StringInsteadOfEnum : DtsPackage.Options.StringInsteadOfEnum;
             }
         }
 
@@ -187,6 +202,9 @@ namespace TypeScriptDefinitionGenerator
 
         //        [JsonRequired]
         public bool ClassInsteadOfInterface { get; set; } = OptionsDialogPage._defClassInsteadOfInterface;
+
+        //        [JsonRequired]
+        public bool StringInsteadOfEnum { get; set; } = OptionsDialogPage._defStringInsteadOfEnum;
 
         //        [JsonRequired]
         public bool GlobalScope { get; set; } = OptionsDialogPage._defGlobalScope;
