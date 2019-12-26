@@ -112,6 +112,7 @@ namespace TypeScriptDefinitionGenerator
             {
                 Name = element.Name,
                 IsEnum = element.Kind == vsCMElement.vsCMElementEnum,
+                IsPublic = element.Access == vsCMAccess.vsCMAccessPublic,
                 FullName = element.FullName,
                 Namespace = GetNamespace(element),
                 Summary = GetSummary(element)
@@ -158,6 +159,7 @@ namespace TypeScriptDefinitionGenerator
             {
                 Namespace = ns,
                 Name = className,
+                IsPublic = cc.Access == vsCMAccess.vsCMAccessPublic,
                 BaseNamespace = baseNs,
                 BaseName = baseClassName,
                 FullName = cc.FullName,
