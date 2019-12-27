@@ -20,7 +20,8 @@ namespace TypeScriptDefinitionGenerator
             {
                 if (!Options.GlobalScope)
                 {
-                    sb.AppendFormat("declare module {0} {{\r\n", ns.Key);
+                    sb.AppendFormat(ns.First().IsPublic ? "export" : "declare");
+                    sb.AppendFormat(" module {0} {{\r\n", ns.Key);
                 }
 
                 foreach (IntellisenseObject io in ns)
