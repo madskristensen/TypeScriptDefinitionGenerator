@@ -13,7 +13,6 @@ namespace TypeScriptDefinitionGenerator
 {
     public static class IntellisenseParser
     {
-        private static string DefaultModuleName = Options.DefaultModuleName;
         private const string ModuleNameAttributeName = "TypeScriptModule";
         private static readonly Regex IsNumber = new Regex("^[0-9a-fx]+[ul]{0,2}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static Project _project;
@@ -241,7 +240,7 @@ namespace TypeScriptDefinitionGenerator
 
         private static string GetNamespace(CodeElements attrs)
         {
-            if (attrs == null) return DefaultModuleName;
+            if (attrs == null) return "server";
 
             var namespaceFromAttr = from a in attrs.Cast<CodeAttribute2>()
                                     where a.Name.EndsWith(ModuleNameAttributeName, StringComparison.OrdinalIgnoreCase)
@@ -250,7 +249,7 @@ namespace TypeScriptDefinitionGenerator
                                     where !string.IsNullOrWhiteSpace(v)
                                     select v;
 
-            return namespaceFromAttr.FirstOrDefault() ?? DefaultModuleName;
+            return namespaceFromAttr.FirstOrDefault() ?? "server";
         }
 
         private static IntellisenseType GetType(CodeClass rootElement, CodeTypeRef codeTypeRef, HashSet<string> traversedTypes, HashSet<string> references)

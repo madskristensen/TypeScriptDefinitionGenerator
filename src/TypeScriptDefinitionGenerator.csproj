@@ -19,7 +19,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TypeScriptDefinitionGenerator</RootNamespace>
-    <AssemblyName>TypeScriptDefinitionGenerator</AssemblyName>
+    <AssemblyName>TypeScriptGenerator</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
     <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>

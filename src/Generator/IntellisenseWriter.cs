@@ -18,12 +18,6 @@ namespace TypeScriptDefinitionGenerator
 
             foreach (var ns in objects.GroupBy(o => o.Namespace))
             {
-                if (!Options.GlobalScope)
-                {
-                    sb.AppendFormat(ns.First().IsPublic ? "export" : "declare");
-                    sb.AppendFormat(" module {0} {{\r\n", ns.Key);
-                }
-
                 foreach (IntellisenseObject io in ns)
                 {
                     if (!string.IsNullOrEmpty(io.Summary))
@@ -61,7 +55,7 @@ namespace TypeScriptDefinitionGenerator
                     }
                     else
                     {
-                        string type = Options.ClassInsteadOfInterface ? "\tclass " : "\tinterface ";
+                        string type = Options.ClassInsteadOfInterface ? "class " : "interface ";
                         sb.Append(type).Append(Utility.CamelCaseClassName(io.Name)).Append(" ");
 
                         if (!string.IsNullOrEmpty(io.BaseName))
@@ -74,14 +68,9 @@ namespace TypeScriptDefinitionGenerator
                             sb.Append(Utility.CamelCaseClassName(io.BaseName)).Append(" ");
                         }
 
-                        WriteTSInterfaceDefinition(sb, "\t", io.Properties);
+                        WriteTSInterfaceDefinition(sb, "", io.Properties);
                         sb.AppendLine();
                     }
-                }
-
-                if (!Options.GlobalScope)
-                {
-                    sb.AppendLine("}");
                 }
             }
 

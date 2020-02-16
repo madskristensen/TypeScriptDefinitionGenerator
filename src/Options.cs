@@ -34,11 +34,6 @@ namespace TypeScriptDefinitionGenerator
         public bool CamelCaseTypeNames { get; set; } = _defCamelCaseTypeNames;
 
         [Category("Settings")]
-        [DisplayName("Default Module name")]
-        [Description("Set the top-level module name for the generated .d.ts file. Default is \"server\"")]
-        public string DefaultModuleName { get; set; } = _defModuleName;
-
-        [Category("Settings")]
         [DisplayName("Class instead of Interface")]
         [Description("Controls whether to generate a class or an interface: default is an Interface")]
         [DefaultValue(_defClassInsteadOfInterface)]
@@ -50,16 +45,9 @@ namespace TypeScriptDefinitionGenerator
         [DefaultValue(_defStringInsteadOfEnum)]
         public bool StringInsteadOfEnum { get; set; } = _defStringInsteadOfEnum;
 
-        [Category("Settings")]
-        [DisplayName("Generate in global scope")]
-        [Description("Controls whether to generate types in Global scope or wrapped in a module")]
-        [DefaultValue(_defGlobalScope)]
-        public bool GlobalScope { get; set; } = _defGlobalScope;
-
-
         [Category("Compatibilty")]
         [DisplayName("Web Esentials 2015 file names")]
-        [Description("Web Essentials 2015 format is <filename>.cs.d.ts instead of <filename>.d.ts")]
+        [Description("Web Essentials 2015 format is <filename>.cs.ts instead of <filename>.ts")]
         [DefaultValue(_defWebEssentials2015)]
         public bool WebEssentials2015 { get; set; } = _defWebEssentials2015;
     }
@@ -92,14 +80,6 @@ namespace TypeScriptDefinitionGenerator
             }
         }
 
-        static public string DefaultModuleName
-        {
-            get
-            {
-                return overrides != null ? overrides.DefaultModuleName : DtsPackage.Options.DefaultModuleName;
-            }
-        }
-
         static public bool ClassInsteadOfInterface
         {
             get
@@ -113,14 +93,6 @@ namespace TypeScriptDefinitionGenerator
             get
             {
                 return overrides != null ? overrides.StringInsteadOfEnum : DtsPackage.Options.StringInsteadOfEnum;
-            }
-        }
-
-        static public bool GlobalScope
-        {
-            get
-            {
-                return overrides != null ? overrides.GlobalScope : DtsPackage.Options.GlobalScope;
             }
         }
 
