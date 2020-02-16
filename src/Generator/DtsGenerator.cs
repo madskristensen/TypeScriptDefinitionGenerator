@@ -75,14 +75,14 @@ namespace TypeScriptDefinitionGenerator
                     Directory.CreateDirectory(angularModelDirPath);
                 if (!File.Exists(angularModelindexTsPath))
                 {
-                    File.WriteAllText(angularModelindexTsPath, $"export * from '{relativePath}'\n");
+                    File.WriteAllText(angularModelindexTsPath, $"export * from '{relativePath}';\n");
                 }
                 else
                 {
                     List<string> lines = File.ReadAllLines(angularModelindexTsPath).ToList();
                     if (!lines.Any( l => l.Contains(inputFileName)))
                     {
-                        lines.Add($"export * from '{relativePath}'\n");
+                        lines.Add($"export * from '{relativePath}';\n");
                         File.WriteAllLines(angularModelindexTsPath, lines.ToArray());
                     }
                 }
