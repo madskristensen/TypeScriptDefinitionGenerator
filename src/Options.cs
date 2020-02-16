@@ -12,11 +12,8 @@ namespace TypeScriptDefinitionGenerator
         internal const bool _defCamelCaseEnumerationValues = true;
         internal const bool _defCamelCasePropertyNames = true;
         internal const bool _defCamelCaseTypeNames = true;
-        internal const bool _defClassInsteadOfInterface = false;
+        internal const bool _defClassInsteadOfInterface = true;
         internal const bool _defStringInsteadOfEnum = false;
-        internal const bool _defGlobalScope = false;
-        internal const bool _defWebEssentials2015 = true;
-        internal const string _defModuleName = "server";
 
         [Category("Casing")]
         [DisplayName("Camel case enum values")]
@@ -159,19 +156,11 @@ namespace TypeScriptDefinitionGenerator
         public bool CamelCaseTypeNames { get; set; } = OptionsDialogPage._defCamelCaseTypeNames;
 
         //        [JsonRequired]
-        public string DefaultModuleName { get; set; } = OptionsDialogPage._defModuleName;
-
-        //        [JsonRequired]
         public bool ClassInsteadOfInterface { get; set; } = OptionsDialogPage._defClassInsteadOfInterface;
 
         //        [JsonRequired]
         public bool StringInsteadOfEnum { get; set; } = OptionsDialogPage._defStringInsteadOfEnum;
 
-        //        [JsonRequired]
-        public bool GlobalScope { get; set; } = OptionsDialogPage._defGlobalScope;
-
-        //        [JsonRequired]
-        public bool WebEssentials2015 { get; set; } = OptionsDialogPage._defWebEssentials2015;
 
     }
 

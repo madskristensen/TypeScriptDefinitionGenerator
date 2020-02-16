@@ -1,7 +1,9 @@
 ﻿using EnvDTE;
 using Microsoft.VisualStudio.TextTemplating.VSHost;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -30,6 +32,7 @@ namespace TypeScriptDefinitionGenerator
         protected override byte[] GenerateCode(string inputFileName, string inputFileContent)
         {
             ProjectItem item = Dte.Solution.FindProjectItem(inputFileName);
+            
             this.originalExt = Path.GetExtension(inputFileName);
             if (item != null)
             {
@@ -38,6 +41,8 @@ namespace TypeScriptDefinitionGenerator
                     string dts = GenerationService.ConvertToTypeScript(item);
 
                     Telemetry.TrackOperation("FileGenerated");
+
+                    InsertToIndex(item, Path.GetFileNameWithoutExtension(inputFileName));
 
                     return Encoding.UTF8.GetBytes(dts);
                 }
@@ -49,6 +54,40 @@ namespace TypeScriptDefinitionGenerator
             }
 
             return new byte[0];
+        }
+
+        private void InsertToIndex(ProjectItem item, string inputFileName)
+        {
+            string projectPath = Path.GetDirectoryName(item.ContainingProject.FileName);
+            string angularAppPath = Path.Combine(projectPath, "ClientApp", "src", "app");
+            string angularModelDirPath = Path.Combine(angularAppPath, "models");
+            string angularModelindexTsPath = Path.Combine(angularModelDirPath, "index.ts");            
+            Uri toUri = new Uri(item.Document.Path);
+            Uri fromUri = new Uri(angularModelDirPath + "/");
+            Uri relativeUri = fromUri.MakeRelativeUri(toUri);
+            string relativePath = Path.Combine(
+                Uri.UnescapeDataString(relativeUri.ToString()), 
+                inputFileName);
+
+            if (Directory.Exists(angularAppPath))
+            {
+                if (!Directory.Exists(angularModelDirPath))
+                    Directory.CreateDirectory(angularModelDirPath);
+                if (!File.Exists(angularModelindexTsPath))
+                {
+                    File.WriteAllText(angularModelindexTsPath, $"export * from '{relativePath}'\n");
+                }
+                else
+                {
+                    List<string> lines = File.ReadAllLines(angularModelindexTsPath).ToList();
+                    if (!lines.Any( l => l.Contains(inputFileName)))
+                    {
+                        lines.Add($"export * from '{relativePath}'\n");
+                        File.WriteAllLines(angularModelindexTsPath, lines.ToArray());
+                    }
+                }
+
+            }
         }
     }
 }
