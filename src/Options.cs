@@ -44,12 +44,7 @@ namespace TypeScriptDefinitionGenerator
         [Description("Controls whether to generate an enum or a string ('a' | 'b' | 'c'): default is an Interface")]
         [DefaultValue(_defStringInsteadOfEnum)]
         public bool StringInsteadOfEnum { get; set; } = _defStringInsteadOfEnum;
-
-        [Category("Compatibilty")]
-        [DisplayName("Web Esentials 2015 file names")]
-        [Description("Web Essentials 2015 format is <filename>.cs.ts instead of <filename>.ts")]
-        [DefaultValue(_defWebEssentials2015)]
-        public bool WebEssentials2015 { get; set; } = _defWebEssentials2015;
+      
     }
 
     public class Options
@@ -96,13 +91,7 @@ namespace TypeScriptDefinitionGenerator
             }
         }
 
-        static public bool WebEssentials2015
-        {
-            get
-            {
-                return overrides != null ? overrides.WebEssentials2015 : DtsPackage.Options.WebEssentials2015;
-            }
-        }
+        static public bool WebEssentials2015 => false;
 
         public static void ReadOptionOverrides(ProjectItem sourceItem, bool display = true)
         {
