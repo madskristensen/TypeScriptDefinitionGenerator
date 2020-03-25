@@ -56,7 +56,7 @@ namespace TypeScriptDefinitionGenerator
                     else
                     {
                         string type = Options.ClassInsteadOfInterface ? "class " : "interface ";
-                        sb.Append("export " + type).Append(Utility.CamelCaseClassName(io.Name)).Append(" ");
+                        sb.Append("export " + type).Append(io.Name).Append(" ");
 
                         if (!string.IsNullOrEmpty(io.BaseName))
                         {
