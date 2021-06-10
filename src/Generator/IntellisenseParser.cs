@@ -223,7 +223,20 @@ namespace TypeScriptDefinitionGenerator
         private static string GetDataContractName(CodeClass cc, string attrName)
         {
             var dataContractAttribute = cc.Attributes.Cast<CodeAttribute>().Where(a => a.Name == "DataContract");
+            return GetDataContractNameInner(dataContractAttribute, attrName);
+        }
 
+        private static string GetNamespace(CodeEnum cc)
+        {
+            return GetDataContractName(cc, "Namespace") ?? GetNamespace(cc.Attributes);
+        }
+        private static string GetDataContractName(CodeEnum cc, string attrName)
+        {
+            var dataContractAttribute = cc.Attributes.Cast<CodeAttribute>().Where(a => a.Name == "DataContract");
+            return GetDataContractNameInner(dataContractAttribute, attrName);
+        }
+        private static string GetDataContractNameInner(IEnumerable<CodeAttribute> dataContractAttribute, string attrName)
+        {
             if (!dataContractAttribute.Any())
                 return null;
 
@@ -236,8 +249,6 @@ namespace TypeScriptDefinitionGenerator
 
             return name;
         }
-
-        private static string GetNamespace(CodeEnum cc) { return GetNamespace(cc.Attributes); }
 
         private static string GetNamespace(CodeElements attrs)
         {
