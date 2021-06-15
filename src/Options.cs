@@ -58,7 +58,7 @@ namespace TypeScriptDefinitionGenerator
 
 
         [Category("Compatibilty")]
-        [DisplayName("Web Esentials 2015 file names")]
+        [DisplayName("Web Essentials 2015 file names")]
         [Description("Web Essentials 2015 format is <filename>.cs.d.ts instead of <filename>.d.ts")]
         [DefaultValue(_defWebEssentials2015)]
         public bool WebEssentials2015 { get; set; } = _defWebEssentials2015;
