@@ -16,18 +16,19 @@ namespace TypeScriptDefinitionGenerator
         {
             var sb = new StringBuilder();
 
-            foreach (var ns in objects.GroupBy(o => o.Namespace))
+            foreach (IGrouping<string, IntellisenseObject> ns in objects.GroupBy(o => o.Namespace))
             {
                 if (!Options.GlobalScope)
                 {
-                    sb.AppendFormat(ns.First().IsPublic ? "export" : "declare");
-                    sb.AppendFormat(" module {0} {{\r\n", ns.Key);
+                    sb.AppendFormat("declare module {0} {{\r\n", ns.Key);
                 }
 
                 foreach (IntellisenseObject io in ns)
                 {
                     if (!string.IsNullOrEmpty(io.Summary))
+                    {
                         sb.AppendLine("\t/** " + _whitespaceTrimmer.Replace(io.Summary, "") + " */");
+                    }
 
                     if (io.IsEnum)
                     {
@@ -35,7 +36,7 @@ namespace TypeScriptDefinitionGenerator
                         {
                             sb.AppendLine("\tconst enum " + Utility.CamelCaseClassName(io.Name) + " {");
 
-                            foreach (var p in io.Properties)
+                            foreach (IntellisenseProperty p in io.Properties)
                             {
                                 WriteTypeScriptComment(p, sb);
 
@@ -53,7 +54,7 @@ namespace TypeScriptDefinitionGenerator
                         }
                         else
                         {
-                            var propsNames = io.Properties.Select(p => "'" + Utility.CamelCaseEnumValue(p.Name) + "'");
+                            IEnumerable<string> propsNames = io.Properties.Select(p => "'" + Utility.CamelCaseEnumValue(p.Name) + "'");
                             var propsString = string.Join(" | ", propsNames);
 
                             sb.AppendLine("\ttype " + Utility.CamelCaseClassName(io.Name) + " = " + propsString + ";");
@@ -61,7 +62,7 @@ namespace TypeScriptDefinitionGenerator
                     }
                     else
                     {
-                        string type = Options.ClassInsteadOfInterface ? "\tclass " : "\tinterface ";
+                        var type = Options.ClassInsteadOfInterface ? "\tclass " : "\tinterface ";
                         sb.Append(type).Append(Utility.CamelCaseClassName(io.Name)).Append(" ");
 
                         if (!string.IsNullOrEmpty(io.BaseName))
@@ -69,7 +70,9 @@ namespace TypeScriptDefinitionGenerator
                             sb.Append("extends ");
 
                             if (!string.IsNullOrEmpty(io.BaseNamespace) && io.BaseNamespace != io.Namespace)
+                            {
                                 sb.Append(io.BaseNamespace).Append(".");
+                            }
 
                             sb.Append(Utility.CamelCaseClassName(io.BaseName)).Append(" ");
                         }
@@ -91,16 +94,28 @@ namespace TypeScriptDefinitionGenerator
         private static string CleanEnumInitValue(string value)
         {
             value = value.TrimEnd('u', 'U', 'l', 'L'); //uint ulong long
-            if (value.StartsWith("0x", StringComparison.OrdinalIgnoreCase)) return value;
+            if (value.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            {
+                return value;
+            }
+
             var trimedValue = value.TrimStart('0'); // prevent numbers to be parsed as octal in js.
-            if (trimedValue.Length > 0) return trimedValue;
+            if (trimedValue.Length > 0)
+            {
+                return trimedValue;
+            }
+
             return "0";
         }
 
 
         private static void WriteTypeScriptComment(IntellisenseProperty p, StringBuilder sb)
         {
-            if (string.IsNullOrEmpty(p.Summary)) return;
+            if (string.IsNullOrEmpty(p.Summary))
+            {
+                return;
+            }
+
             sb.AppendLine("\t\t/** " + _whitespaceTrimmer.Replace(p.Summary, "") + " */");
         }
 
@@ -109,18 +124,30 @@ namespace TypeScriptDefinitionGenerator
         {
             sb.AppendLine("{");
 
-            foreach (var p in props)
+            foreach (IntellisenseProperty p in props)
             {
                 WriteTypeScriptComment(p, sb);
                 sb.AppendFormat("{0}\t{1}: ", prefix, Utility.CamelCasePropertyName(p.NameWithOption));
 
-                if (p.Type.IsKnownType) sb.Append(p.Type.TypeScriptName);
+                if (p.Type.IsKnownType)
+                {
+                    sb.Append(p.Type.TypeScriptName);
+                }
                 else
                 {
-                    if (p.Type.Shape == null) sb.Append("any");
-                    else WriteTSInterfaceDefinition(sb, prefix + "\t", p.Type.Shape);
+                    if (p.Type.Shape == null)
+                    {
+                        sb.Append("any");
+                    }
+                    else
+                    {
+                        WriteTSInterfaceDefinition(sb, prefix + "\t", p.Type.Shape);
+                    }
                 }
-                if (p.Type.IsArray) sb.Append("[]");
+                if (p.Type.IsArray)
+                {
+                    sb.Append("[]");
+                }
 
                 sb.AppendLine(";");
             }

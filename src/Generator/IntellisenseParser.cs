@@ -1,19 +1,19 @@
-﻿using EnvDTE;
-using EnvDTE80;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using EnvDTE;
+using EnvDTE80;
 using TypeScriptDefinitionGenerator.Helpers;
 
 namespace TypeScriptDefinitionGenerator
 {
     public static class IntellisenseParser
     {
-        private static string DefaultModuleName = Options.DefaultModuleName;
+        private static readonly string DefaultModuleName = Options.DefaultModuleName;
         private const string ModuleNameAttributeName = "TypeScriptModule";
         private static readonly Regex IsNumber = new Regex("^[0-9a-fx]+[ul]{0,2}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static Project _project;
@@ -26,29 +26,37 @@ namespace TypeScriptDefinitionGenerator
         internal static IEnumerable<IntellisenseObject> ProcessFile(ProjectItem item, HashSet<CodeClass> underProcess = null)
         {
             if (item.FileCodeModel == null || item.ContainingProject == null)
+            {
                 return null;
+            }
 
             _project = item.ContainingProject;
 
-            List<IntellisenseObject> list = new List<IntellisenseObject>();
+            var list = new List<IntellisenseObject>();
 
             if (underProcess == null)
+            {
                 underProcess = new HashSet<CodeClass>();
+            }
 
             foreach (CodeElement element in item.FileCodeModel.CodeElements)
             {
                 if (element.Kind == vsCMElement.vsCMElementNamespace)
                 {
-                    CodeNamespace cn = (CodeNamespace)element;
+                    var cn = (CodeNamespace)element;
 
                     foreach (CodeElement member in cn.Members)
                     {
                         if (ShouldProcess(member))
+                        {
                             ProcessElement(member, list, underProcess);
+                        }
                     }
                 }
                 else if (ShouldProcess(element))
+                {
                     ProcessElement(element, list, underProcess);
+                }
             }
 
             return new HashSet<IntellisenseObject>(list);
@@ -65,7 +73,9 @@ namespace TypeScriptDefinitionGenerator
 
                 // Don't re-generate the intellisense.
                 if (list.Any(x => x.Name == GetClassName(cc) && x.Namespace == GetNamespace(cc)))
+                {
                     return;
+                }
 
                 // Collect inherit classes.
                 CodeClass baseClass = null;
@@ -108,17 +118,16 @@ namespace TypeScriptDefinitionGenerator
 
         private static void ProcessEnum(CodeEnum element, List<IntellisenseObject> list)
         {
-            IntellisenseObject data = new IntellisenseObject
+            var data = new IntellisenseObject
             {
                 Name = element.Name,
                 IsEnum = element.Kind == vsCMElement.vsCMElementEnum,
-                IsPublic = element.Access == vsCMAccess.vsCMAccessPublic,
                 FullName = element.FullName,
                 Namespace = GetNamespace(element),
                 Summary = GetSummary(element)
             };
 
-            foreach (var codeEnum in element.Members.OfType<CodeVariable>())
+            foreach (CodeVariable codeEnum in element.Members.OfType<CodeVariable>())
             {
                 var prop = new IntellisenseProperty
                 {
@@ -131,22 +140,26 @@ namespace TypeScriptDefinitionGenerator
             }
 
             if (data.Properties.Count > 0)
+            {
                 list.Add(data);
+            }
         }
 
         private static void ProcessClass(CodeClass cc, CodeClass baseClass, List<IntellisenseObject> list, HashSet<CodeClass> underProcess)
         {
             string baseNs = null;
             string baseClassName = null;
-            string ns = GetNamespace(cc);
-            string className = GetClassName(cc);
-            HashSet<string> references = new HashSet<string>();
+            var ns = GetNamespace(cc);
+            var className = GetClassName(cc);
+            var references = new HashSet<string>();
             IList<IntellisenseProperty> properties = GetProperties(cc.Members, new HashSet<string>(), references).ToList();
 
             foreach (CodeElement member in cc.Members)
             {
                 if (ShouldProcess(member))
+                {
                     ProcessElement(member, list, underProcess);
+                }
             }
 
             if (baseClass != null)
@@ -159,7 +172,6 @@ namespace TypeScriptDefinitionGenerator
             {
                 Namespace = ns,
                 Name = className,
-                IsPublic = cc.Access == vsCMAccess.vsCMAccessPublic,
                 BaseNamespace = baseNs,
                 BaseName = baseClassName,
                 FullName = cc.FullName,
@@ -191,16 +203,16 @@ namespace TypeScriptDefinitionGenerator
 
         private static bool IsPublic(CodeFunction cf)
         {
-            var fun = cf.Kind;
+            vsCMElement fun = cf.Kind;
 
-            bool retVal = false;
+            var retVal = false;
             try
             {
                 retVal = cf.Access == vsCMAccess.vsCMAccessPublic;
             }
             catch (COMException)
             {
-                CodeProperty cp = cf.Parent as CodeProperty;
+                var cp = cf.Parent as CodeProperty;
                 if (cp != null)
                 {
                     retVal = cp.Access == vsCMAccess.vsCMAccessPublic;
@@ -222,7 +234,7 @@ namespace TypeScriptDefinitionGenerator
 
         private static string GetDataContractName(CodeClass cc, string attrName)
         {
-            var dataContractAttribute = cc.Attributes.Cast<CodeAttribute>().Where(a => a.Name == "DataContract");
+            IEnumerable<CodeAttribute> dataContractAttribute = cc.Attributes.Cast<CodeAttribute>().Where(a => a.Name == "DataContract");
             return GetDataContractNameInner(dataContractAttribute, attrName);
         }
 
@@ -232,34 +244,41 @@ namespace TypeScriptDefinitionGenerator
         }
         private static string GetDataContractName(CodeEnum cc, string attrName)
         {
-            var dataContractAttribute = cc.Attributes.Cast<CodeAttribute>().Where(a => a.Name == "DataContract");
+            IEnumerable<CodeAttribute> dataContractAttribute = cc.Attributes.Cast<CodeAttribute>().Where(a => a.Name == "DataContract");
             return GetDataContractNameInner(dataContractAttribute, attrName);
         }
         private static string GetDataContractNameInner(IEnumerable<CodeAttribute> dataContractAttribute, string attrName)
         {
             if (!dataContractAttribute.Any())
+            {
                 return null;
+            }
 
             string name = null;
             var keyValues = dataContractAttribute.First().Children.OfType<CodeAttributeArgument>()
                            .ToDictionary(a => a.Name, a => (a.Value ?? "").Trim('\"', '\''));
 
             if (keyValues.ContainsKey(attrName))
+            {
                 name = keyValues[attrName];
+            }
 
             return name;
         }
 
         private static string GetNamespace(CodeElements attrs)
         {
-            if (attrs == null) return DefaultModuleName;
+            if (attrs == null)
+            {
+                return DefaultModuleName;
+            }
 
-            var namespaceFromAttr = from a in attrs.Cast<CodeAttribute2>()
-                                    where a.Name.EndsWith(ModuleNameAttributeName, StringComparison.OrdinalIgnoreCase)
-                                    from arg in a.Arguments.Cast<CodeAttributeArgument>()
-                                    let v = (arg.Value ?? "").Trim('\"')
-                                    where !string.IsNullOrWhiteSpace(v)
-                                    select v;
+            IEnumerable<string> namespaceFromAttr = from a in attrs.Cast<CodeAttribute2>()
+                                                    where a.Name.EndsWith(ModuleNameAttributeName, StringComparison.OrdinalIgnoreCase)
+                                                    from arg in a.Arguments.Cast<CodeAttributeArgument>()
+                                                    let v = (arg.Value ?? "").Trim('\"')
+                                                    where !string.IsNullOrWhiteSpace(v)
+                                                    select v;
 
             return namespaceFromAttr.FirstOrDefault() ?? DefaultModuleName;
         }
@@ -270,9 +289,15 @@ namespace TypeScriptDefinitionGenerator
             var isCollection = codeTypeRef.AsString.StartsWith("System.Collections", StringComparison.Ordinal);
             var isDictionary = false;
 
-            var effectiveTypeRef = codeTypeRef;
-            if (isArray && codeTypeRef.ElementType != null) effectiveTypeRef = effectiveTypeRef.ElementType;
-            else if (isCollection) effectiveTypeRef = TryToGuessGenericArgument(rootElement, effectiveTypeRef);
+            CodeTypeRef effectiveTypeRef = codeTypeRef;
+            if (isArray && codeTypeRef.ElementType != null)
+            {
+                effectiveTypeRef = effectiveTypeRef.ElementType;
+            }
+            else if (isCollection)
+            {
+                effectiveTypeRef = TryToGuessGenericArgument(rootElement, effectiveTypeRef);
+            }
 
             if (isCollection)
             {
@@ -280,7 +305,7 @@ namespace TypeScriptDefinitionGenerator
                             || codeTypeRef.AsString.StartsWith("System.Collections.Generic.IDictionary", StringComparison.Ordinal);
             }
 
-            string typeName = effectiveTypeRef.AsFullName;
+            var typeName = effectiveTypeRef.AsFullName;
 
             try
             {
@@ -322,7 +347,10 @@ namespace TypeScriptDefinitionGenerator
         private static CodeTypeRef TryToGuessGenericArgument(CodeClass rootElement, CodeTypeRef codeTypeRef)
         {
             var codeTypeRef2 = codeTypeRef as CodeTypeRef2;
-            if (codeTypeRef2 == null || !codeTypeRef2.IsGeneric) return codeTypeRef;
+            if (codeTypeRef2 == null || !codeTypeRef2.IsGeneric)
+            {
+                return codeTypeRef;
+            }
 
             // There is no way to extract generic parameter as CodeTypeRef or something similar
             // (see http://social.msdn.microsoft.com/Forums/vstudio/en-US/09504bdc-2b81-405a-a2f7-158fb721ee90/envdte-envdte80-codetyperef2-and-generic-types?forum=vsx)
@@ -344,9 +372,13 @@ namespace TypeScriptDefinitionGenerator
                 projCodeModel = _project.CodeModel;
             }
 
-            var codeType = projCodeModel.CodeTypeFromFullName(TryToGuessFullName(typeNameAsInCode));
+            CodeType codeType = projCodeModel.CodeTypeFromFullName(TryToGuessFullName(typeNameAsInCode));
 
-            if (codeType != null) return projCodeModel.CreateCodeTypeRef(codeType);
+            if (codeType != null)
+            {
+                return projCodeModel.CreateCodeTypeRef(codeType);
+            }
+
             return codeTypeRef;
         }
 
@@ -367,8 +399,10 @@ namespace TypeScriptDefinitionGenerator
 
         private static string TryToGuessFullName(string typeName)
         {
-            if (_knownPrimitiveTypes.TryGetValue(typeName, out var primitiveType))
+            if (_knownPrimitiveTypes.TryGetValue(typeName, out Type primitiveType))
+            {
                 return primitiveType.FullName;
+            }
 
             return typeName;
         }
@@ -376,10 +410,14 @@ namespace TypeScriptDefinitionGenerator
         private static bool IsPrimitive(CodeTypeRef codeTypeRef)
         {
             if (codeTypeRef.TypeKind != vsCMTypeRef.vsCMTypeRefOther && codeTypeRef.TypeKind != vsCMTypeRef.vsCMTypeRefCodeType)
+            {
                 return true;
+            }
 
             if (codeTypeRef.AsString.EndsWith("DateTime", StringComparison.Ordinal))
+            {
                 return true;
+            }
 
             return false;
         }
@@ -414,15 +452,21 @@ namespace TypeScriptDefinitionGenerator
                 var className = Path.GetExtension(attr.Name);
 
                 if (string.IsNullOrEmpty(className))
+                {
                     className = attr.Name;
+                }
 
                 if (!nameAttributes.TryGetValue(className, out var argumentNames))
+                {
                     continue;
+                }
 
-                var value = attr.Children.OfType<CodeAttributeArgument>().FirstOrDefault(a => argumentNames.Contains(a.Name));
+                CodeAttributeArgument value = attr.Children.OfType<CodeAttributeArgument>().FirstOrDefault(a => argumentNames.Contains(a.Name));
 
                 if (value == null)
+                {
                     break;
+                }
 
                 // Strip the leading & trailing quotes
                 return value.Value.Trim('@', '\'', '"');
@@ -443,11 +487,13 @@ namespace TypeScriptDefinitionGenerator
         private static string GetSummary(vsCMInfoLocation location, string xmlComment, string inlineComment, string fullName)
         {
             if (location != vsCMInfoLocation.vsCMInfoLocationProject || (string.IsNullOrWhiteSpace(xmlComment) && string.IsNullOrWhiteSpace(inlineComment)))
+            {
                 return null;
+            }
 
             try
             {
-                string summary = "";
+                var summary = "";
                 if (!string.IsNullOrWhiteSpace(xmlComment))
                 {
                     summary = XElement.Parse(xmlComment)
@@ -455,8 +501,16 @@ namespace TypeScriptDefinitionGenerator
                                .Select(x => x.Value)
                                .FirstOrDefault();
                 }
-                if (!string.IsNullOrEmpty(summary)) return summary.Trim();
-                if (!string.IsNullOrWhiteSpace(inlineComment)) return inlineComment.Trim();
+                if (!string.IsNullOrEmpty(summary))
+                {
+                    return summary.Trim();
+                }
+
+                if (!string.IsNullOrWhiteSpace(inlineComment))
+                {
+                    return inlineComment.Trim();
+                }
+
                 return null;
             }
             catch (Exception ex)
@@ -470,8 +524,11 @@ namespace TypeScriptDefinitionGenerator
         {
             if (initExpression != null)
             {
-                string initializer = initExpression.ToString();
-                if (IsNumber.IsMatch(initializer)) return initializer;
+                var initializer = initExpression.ToString();
+                if (IsNumber.IsMatch(initializer))
+                {
+                    return initializer;
+                }
             }
             return null;
         }
