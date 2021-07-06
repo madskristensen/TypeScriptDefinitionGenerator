@@ -57,11 +57,13 @@ namespace TypeScriptDefinitionGenerator
                 VSHelpers.WriteOnOutputWindow(string.Format("{0} - Started", sourceItem.Name));
                 var list = IntellisenseParser.ProcessFile(sourceItem);
                 VSHelpers.WriteOnOutputWindow(string.Format("{0} - Completed", sourceItem.Name));
-                return IntellisenseWriter.WriteTypeScript(list);
+                return IntellisenseWriter.WriteTypeScript(list, Path.GetDirectoryName(sourceItem.Document.FullName));
             }
             catch (Exception ex)
             {
                 VSHelpers.WriteOnOutputWindow(string.Format("{0} - Failure", sourceItem.Name));
+                VSHelpers.WriteOnOutputWindow(ex.Message);
+                VSHelpers.WriteOnOutputWindow(ex.StackTrace);
                 Telemetry.TrackException("ParseFailure", ex);
                 return null;
             }

@@ -14,8 +14,8 @@ namespace TypeScriptDefinitionGenerator
         internal const bool _defCamelCaseTypeNames = true;
         internal const bool _defClassInsteadOfInterface = true;
         internal const bool _defStringInsteadOfEnum = false;
-        internal const bool _defGlobalScope = false;
-        internal const bool _defWebEssentials2015 = true;
+        internal const bool _defGlobalScope = true;
+        internal const bool _defWebEssentials2015 = false;
         internal const string _defModuleName = "server";
 
         [Category("Casing")]

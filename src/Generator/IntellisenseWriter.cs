@@ -12,7 +12,7 @@ namespace TypeScriptDefinitionGenerator
     {
         private static readonly Regex _whitespaceTrimmer = new Regex(@"^\s+|\s+$|\s*[\r\n]+\s*", RegexOptions.Compiled);
 
-        public static string WriteTypeScript(IEnumerable<IntellisenseObject> objects)
+        public static string WriteTypeScript(IEnumerable<IntellisenseObject> objects, string sourceDirectory)
         {
             var sb = new StringBuilder();
 
@@ -23,6 +23,18 @@ namespace TypeScriptDefinitionGenerator
                     sb.AppendFormat("declare module {0} {{\r\n", ns.Key);
                 }
 
+                foreach (IntellisenseObject io in ns)
+                {
+                    foreach (var reference in io.References)
+                    {
+                        Uri sourceUri = new Uri(reference);
+                        Uri targetUri = new Uri(System.IO.Path.Combine(sourceDirectory, System.IO.Path.GetFileName(reference)));
+                        string relativePath = "./" + targetUri.MakeRelativeUri(sourceUri).ToString().Replace('\\', '/') + System.IO.Path.GetFileNameWithoutExtension(reference);
+                        string refClassName = "{ " + Utility.CamelCaseClassName(System.IO.Path.GetFileNameWithoutExtension(reference)) + " }";
+                        sb.AppendLine($"import {refClassName} from '{relativePath}'");
+                    }
+                }
+                
                 foreach (IntellisenseObject io in ns)
                 {
                     if (!string.IsNullOrEmpty(io.Summary))
@@ -63,7 +75,7 @@ namespace TypeScriptDefinitionGenerator
                     else
                     {
                         var type = Options.ClassInsteadOfInterface ? "\tclass " : "\tinterface ";
-                        sb.Append(type).Append(Utility.CamelCaseClassName(io.Name)).Append(" ");
+                        sb.Append($"export {type}").Append(Utility.CamelCaseClassName(io.Name)).Append(" ");
 
                         if (!string.IsNullOrEmpty(io.BaseName))
                         {

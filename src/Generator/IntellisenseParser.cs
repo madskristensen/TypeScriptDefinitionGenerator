@@ -313,7 +313,7 @@ namespace TypeScriptDefinitionGenerator
                 var codeClass = effectiveTypeRef.CodeType as CodeClass2;
                 var codeEnum = effectiveTypeRef.CodeType as CodeEnum;
                 var isPrimitive = IsPrimitive(effectiveTypeRef);
-
+                
                 var result = new IntellisenseType
                 {
                     IsArray = !isDictionary && (isArray || isCollection),
@@ -323,8 +323,8 @@ namespace TypeScriptDefinitionGenerator
                         effectiveTypeRef.TypeKind == vsCMTypeRef.vsCMTypeRefCodeType &&
                         effectiveTypeRef.CodeType.InfoLocation == vsCMInfoLocation.vsCMInfoLocationProject
                         ?
-                            (codeClass != null && HasIntellisense(codeClass.ProjectItem, references) ? (GetNamespace(codeClass) + "." + Utility.CamelCaseClassName(GetClassName(codeClass))) : null) ??
-                            (codeEnum != null && HasIntellisense(codeEnum.ProjectItem, references) ? (GetNamespace(codeEnum) + "." + Utility.CamelCaseClassName(codeEnum.Name)) : null)
+                            (codeClass != null && HasIntellisense(codeClass.ProjectItem, references) ? (/*GetNamespace(codeClass) + "." +*/ Utility.CamelCaseClassName(GetClassName(codeClass))) : null) ??
+                            (codeEnum != null && HasIntellisense(codeEnum.ProjectItem, references) ? (/*GetNamespace(codeEnum) + "." +*/ Utility.CamelCaseClassName(codeEnum.Name)) : null)
                         : null
                 };
 

@@ -54,6 +54,8 @@ namespace TypeScriptDefinitionGenerator
                 return;
 
             _item = _dte.SelectedItems?.Item(1)?.ProjectItem;
+            if (_item == null)
+                return;
             Options.ReadOptionOverrides(_item, false);
 
             if (_item == null || _item.ContainingProject == null || _item.FileCodeModel == null)
@@ -79,7 +81,9 @@ namespace TypeScriptDefinitionGenerator
         }
 
         private void Execute(object sender, EventArgs e)
-        {
+        {            
+            if (_item == null)
+                return;
             Options.ReadOptionOverrides(_item, false);
             // .NET Core and Website projects
             if (_item.ContainingProject.IsKind(ProjectTypes.DOTNET_Core, ProjectTypes.ASPNET_5, ProjectTypes.WEBSITE_PROJECT))
