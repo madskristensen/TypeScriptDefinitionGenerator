@@ -11,7 +11,6 @@ namespace TypeScriptDefinitionGenerator
         public string BaseName { get; set; }
         public string FullName { get; set; }
         public bool IsEnum { get; set; }
-        public bool IsPublic { get; set; }
         public string Summary { get; set; }
         public IList<IntellisenseProperty> Properties { get; private set; }
         public HashSet<string> References { get; private set; }
