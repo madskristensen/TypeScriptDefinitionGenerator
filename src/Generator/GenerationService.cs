@@ -62,7 +62,6 @@ namespace TypeScriptDefinitionGenerator
             catch (Exception ex)
             {
                 VSHelpers.WriteOnOutputWindow(string.Format("{0} - Failure", sourceItem.Name));
-                Telemetry.TrackException("ParseFailure", ex);
                 return null;
             }
         }
@@ -97,7 +96,6 @@ namespace TypeScriptDefinitionGenerator
                     if (dtsItem != null)
                         dtsItem.Properties.Item("DependentUpon").Value = sourceItem.Name;
 
-                    Telemetry.TrackOperation("FileGenerated");
                 }), DispatcherPriority.ApplicationIdle, null);
             }
             else if (sourceItem.ContainingProject.IsKind(ProjectTypes.WEBSITE_PROJECT))

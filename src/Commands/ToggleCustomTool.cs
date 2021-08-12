@@ -106,12 +106,10 @@ namespace TypeScriptDefinitionGenerator
                 if (synOn)
                 {
                     _item.Properties.Item("CustomTool").Value = "";
-                    Telemetry.TrackUserTask("EnableGeneration");
                 }
                 else
                 {
                     _item.Properties.Item("CustomTool").Value = DtsGenerator.Name;
-                    Telemetry.TrackUserTask("DisabledGeneration");
                 }
             }
         }

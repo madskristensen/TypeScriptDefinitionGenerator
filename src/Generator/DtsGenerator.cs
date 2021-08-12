@@ -38,15 +38,11 @@ namespace TypeScriptDefinitionGenerator
                 {
                     var dts = GenerationService.ConvertToTypeScript(item);
 
-                    Telemetry.TrackOperation("FileGenerated");
-
                     return Encoding.UTF8.GetBytes(dts);
                 }
                 catch (Exception ex)
-                {
-                    Telemetry.TrackOperation("FileGenerated", Microsoft.VisualStudio.Telemetry.TelemetryResult.Failure);
-                    Telemetry.TrackException("FileGenerated", ex);
-                }
+                { }
+                    
             }
 
             return new byte[0];
