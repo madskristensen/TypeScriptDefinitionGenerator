@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="cad7b20b-4b83-4ca6-bf24-ca36a494241c" Version="1.3" Language="en-US" Publisher="Mads Kristensen" />
-        <DisplayName>TypeScript Definition Generator 2019</DisplayName>
+        <Identity Id="cad7b20b-4b83-4ca6-bf24-ca36a494241d" Version="1.3" Language="en-US" Publisher="Mads Kristensen" />
+        <DisplayName>TypeScript Definition Generator 2022</DisplayName>
         <Description xml:space="preserve">Creates and synchronizes TypeScript Definition files (d.ts) from C#/VB model classes to build strongly typed web application where the server- and client-side models are in sync. Works on all .NET project types</Description>
         <MoreInfo>https://github.com/madskristensen/TypeScriptDefinitionGenerator</MoreInfo>
         <License>Resources\LICENSE</License>
@@ -12,7 +12,9 @@
         <Tags>typescript, d.ts, model</Tags>
     </Metadata>
     <Installation>
-        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[16.0,17.0)" />
+      <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0,18.0)">
+        <ProductArchitecture>amd64</ProductArchitecture>
+      </InstallationTarget>
     </Installation>
     <Prerequisites>
         <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0,)" DisplayName="Visual Studio core editor" />
