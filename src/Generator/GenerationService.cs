@@ -131,7 +131,7 @@ namespace TypeScriptDefinitionGenerator
                 if (Options.WebEssentials2015)
                     dtsLinkPath = csRelativePath + Constants.FileExtension;
 
-                // Get a handle to the .d.ts project item.
+                //// Get a handle to the .d.ts project item.
                 //var dtsItem = VSHelpers.GetProjectItem(dtsFile);
 
                 //// 1. Add the generated file to the project's ROOT if it's not already there.
@@ -153,7 +153,7 @@ namespace TypeScriptDefinitionGenerator
                 //        // We want the linked file to appear at the same relative path as the source .cs file.
                     
 
-                //        dtsItem.Properties.Item("Link").Value = dtsLinkPath;
+                //        //dtsItem.Properties.Item("Link").Value = dtsLinkPath;
 
                 //        // Set DependentUpon using the relative path of the source .cs file.
                 //        dtsItem.Properties.Item("DependentUpon").Value = csRelativePath;

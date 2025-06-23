@@ -22,7 +22,14 @@ namespace TypeScriptDefinitionGenerator
             {
                 if (!Options.GlobalScope)
                 {
-                    sb.AppendFormat("declare module {0} {{\r\n", ns.Key);
+                    if (!Options.UseNamespaceInsteadofModule)
+                    {
+                        sb.AppendFormat("declare namespace {0} {{\r\n", ns.Key);
+                    }
+                    else
+                    {
+                        sb.AppendFormat("declare module {0} {{\r\n", ns.Key);
+                    }
                 }
 
                 foreach (IntellisenseObject io in ns)

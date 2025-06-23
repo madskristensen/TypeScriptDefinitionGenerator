@@ -20,6 +20,7 @@ namespace TypeScriptDefinitionGenerator
         internal const string _defModuleName = "server";
         internal const string _defOutputPath = "";
         internal const bool _defUseCSharpNamespace = false;
+        internal const bool _defUseNamespaceInsteadofModule = false;
 
         [Category("Casing")]
         [DisplayName("Camel case enum values")]
@@ -70,6 +71,11 @@ namespace TypeScriptDefinitionGenerator
         [DefaultValue(_defGlobalScope)]
         public bool GlobalScope { get; set; } = _defGlobalScope;
 
+        [Category("Settings")]
+        [DisplayName("Use Namespace instead of Module")]
+        [Description("Controls whether to generate a namespace instead of a module: default is a module")]
+        [DefaultValue(_defUseNamespaceInsteadofModule)]
+        public bool UseNamespaceInsteadofModule { get; set; } = _defUseNamespaceInsteadofModule;
 
         [Category("Compatibilty")]
         [DisplayName("Web Essentials 2015 file names")]
@@ -148,6 +154,8 @@ namespace TypeScriptDefinitionGenerator
 
         static public string OutputPath => overrides?.OutputPath ?? DtsPackage.Options.OutputPath;
         static public bool UseCSharpNamespace => overrides?.UseCSharpNamespace ?? DtsPackage.Options.UseCSharpNamespace;
+
+        static public bool UseNamespaceInsteadofModule => overrides?.UseNamespaceInsteadofModule ?? DtsPackage.Options.UseNamespaceInsteadofModule;
 
         public static string GetProjectRoot(Project project)
         {
@@ -236,6 +244,7 @@ namespace TypeScriptDefinitionGenerator
 
         public string OutputPath { get; set; }
         public bool? UseCSharpNamespace { get; set; }
+        public bool? UseNamespaceInsteadofModule { get; set; }
 
     }
 
