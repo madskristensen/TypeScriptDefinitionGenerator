@@ -212,21 +212,26 @@ namespace TypeScriptDefinitionGenerator
                 dtsFileName = Path.ChangeExtension(dtsFileName, Constants.FileExtension);
             }
 
+            string finalPath; // Use a variable to hold the result
+
             if (string.IsNullOrWhiteSpace(outputPath) || string.IsNullOrEmpty(projectRoot))
             {
                 // Original behavior: save next to the source file
-                return Path.Combine(Path.GetDirectoryName(sourceFile), dtsFileName);
+                finalPath = Path.Combine(Path.GetDirectoryName(sourceFile), dtsFileName);
+            }
+            else
+            {
+                // New behavior: save to custom output path, preserving folder structure
+                Uri sourceUri = new Uri(sourceFile);
+                Uri projectRootUri = new Uri(projectRoot + Path.DirectorySeparatorChar);
+                string relativePath = Uri.UnescapeDataString(projectRootUri.MakeRelativeUri(sourceUri).ToString());
+                string relativeDir = Path.GetDirectoryName(relativePath);
+
+                string finalOutputDir = Path.Combine(projectRoot, outputPath, relativeDir);
+                finalPath = Path.Combine(finalOutputDir, dtsFileName);
             }
 
-            // New behavior: save to custom output path, preserving folder structure
-            Uri sourceUri = new Uri(sourceFile);
-            Uri projectRootUri = new Uri(projectRoot + Path.DirectorySeparatorChar);
-            string relativePath = Uri.UnescapeDataString(projectRootUri.MakeRelativeUri(sourceUri).ToString());
-            string relativeDir = Path.GetDirectoryName(relativePath);
-
-            string finalOutputDir = Path.Combine(projectRoot, outputPath, relativeDir);
-
-            return Path.Combine(finalOutputDir, dtsFileName);
+            return Path.GetFullPath(finalPath);
         }
     }
 }
