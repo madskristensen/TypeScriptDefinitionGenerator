@@ -104,27 +104,9 @@ namespace TypeScriptDefinitionGenerator
             VSHelpers.CheckFileOutOfSourceControl(dtsFile);
             File.WriteAllText(dtsFile, tsContent);
 
-            // DTE operations MUST be marshaled back to the UI thread.
-            // Using the Dispatcher is the correct way to do this.
             Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() =>
             {
-                Project project = sourceItem.ContainingProject;
-
-                // Ensure the .d.ts file is in the project
-                if (VSHelpers.GetProjectItem(dtsFile) == null)
-                {
-                    project.ProjectItems.AddFromFile(dtsFile);
-                }
-
-                // Enable sync for the source file. This is now safe because we are on the UI thread.
                 EnableSyncForProjectItem(sourceItem);
-
-                // Nest the file in Solution Explorer if applicable
-                var dtsItem = VSHelpers.GetProjectItem(dtsFile);
-                if (dtsItem != null && project.IsKind(ProjectTypes.DOTNET_Core, ProjectTypes.ASPNET_5) && string.IsNullOrWhiteSpace(Options.OutputPath))
-                {
-                    try { dtsItem.Properties.Item("DependentUpon").Value = sourceItem.Name; } catch { /* Fails safely */ }
-                }
             }), DispatcherPriority.ApplicationIdle, null);
         }
 
@@ -132,51 +114,85 @@ namespace TypeScriptDefinitionGenerator
         {
             if (csItem == null) return;
 
-            // For modern .NET SDK projects, setting the CustomTool property is how we add the <Generator> metadata.
-            // For legacy projects, this is the standard mechanism anyway.
+            string dtsFile = GenerateFileName(csItem);
+            string dtsFileName = Path.GetFileName(dtsFile);
+            Project project = csItem.ContainingProject; // Get the parent project
+
+            // 1. Add the generated file to the project's ROOT if it's not already there.
+            // THIS IS THE KEY CHANGE. We always add to the project, not the csItem.
+            if (VSHelpers.GetProjectItem(dtsFile) == null)
+            {
+                project.ProjectItems.AddFromFile(dtsFile);
+            }
+
+            // 2. Get a handle to the generated .d.ts project item.
+            var dtsItem = VSHelpers.GetProjectItem(dtsFile);
+
+            // 3. Set properties on the C# source item. (This part is correct)
             try
             {
                 var customToolProp = csItem.Properties.Item("CustomTool");
-                if (customToolProp != null && customToolProp.Value?.ToString() != DtsGenerator.Name)
+                if (customToolProp.Value?.ToString() != DtsGenerator.Name)
                 {
                     customToolProp.Value = DtsGenerator.Name;
-                    VSHelpers.WriteOnOutputWindow($"   -> Enabled sync for '{csItem.Name}'");
+                }
+
+                var lastGenOutputProp = csItem.Properties.Item("LastGenOutput");
+                if (lastGenOutputProp.Value?.ToString() != dtsFileName)
+                {
+                    lastGenOutputProp.Value = dtsFileName;
                 }
             }
             catch (Exception ex)
             {
-                // This can fail if the property doesn't exist for some project types.
-                VSHelpers.WriteOnOutputWindow($"Warning: Could not set CustomTool on '{csItem.Name}'. Sync may not be automatic. {ex.Message}");
+                VSHelpers.WriteOnOutputWindow($"Warning: Could not set generator properties on '{csItem.Name}'. {ex.Message}");
+            }
+
+            // 4. Set properties on the .d.ts generated item for nesting. (This part is correct)
+            if (dtsItem != null)
+            {
+                try
+                {
+                    // The DependentUpon property is what creates the visual nesting in Solution Explorer.
+                    // It works correctly even if the files are in different directories.
+                    var dependentUponProp = dtsItem.Properties.Item("DependentUpon");
+                    if (dependentUponProp.Value?.ToString() != csItem.Name)
+                    {
+                        dependentUponProp.Value = csItem.Name;
+                    }
+
+                    dtsItem.Properties.Item("DesignTime").Value = true;
+                    dtsItem.Properties.Item("AutoGen").Value = true;
+                }
+                catch (Exception ex)
+                {
+                    VSHelpers.WriteOnOutputWindow($"Warning: Could not set nesting properties for '{dtsFileName}'. {ex.Message}");
+                }
             }
         }
 
         public static void DisableSyncForProjectItem(ProjectItem csItem)
         {
             if (csItem == null) return;
-
             string dtsFile = GenerateFileName(csItem);
 
-            // Remove the generated file from disk and project
-            var dtsProjectItem = VSHelpers.GetProjectItem(dtsFile);
-            dtsProjectItem?.Delete();
+            // 1. Delete the generated file from the project and disk.
+            VSHelpers.GetProjectItem(dtsFile)?.Delete();
             if (File.Exists(dtsFile))
             {
-                try { File.Delete(dtsFile); } catch { /* Ignore errors */ }
+                try { File.Delete(dtsFile); } catch { /* Ignore */ }
             }
 
-            // Unset the CustomTool property to remove the <Generator> metadata
+            // 2. Clear the properties on the C# source item.
             try
             {
-                var customToolProp = csItem.Properties.Item("CustomTool");
-                if (customToolProp != null && customToolProp.Value?.ToString() == DtsGenerator.Name)
-                {
-                    customToolProp.Value = "";
-                    VSHelpers.WriteOnOutputWindow($"Sync disabled for '{csItem.Name}'.");
-                }
+                csItem.Properties.Item("CustomTool").Value = "";
+                csItem.Properties.Item("LastGenOutput").Value = "";
+                VSHelpers.WriteOnOutputWindow($"Sync disabled for '{csItem.Name}'.");
             }
             catch (Exception ex)
             {
-                VSHelpers.WriteOnOutputWindow($"Warning: Could not clear CustomTool on '{csItem.Name}'. {ex.Message}");
+                VSHelpers.WriteOnOutputWindow($"Warning: Could not clear generator properties on '{csItem.Name}'. {ex.Message}");
             }
         }
 

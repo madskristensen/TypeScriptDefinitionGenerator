@@ -38,7 +38,7 @@ namespace TypeScriptDefinitionGenerator
                 {
                     var dts = GenerationService.GenerateFromProjectItem(item);
 
-                    return Encoding.UTF8.GetBytes(dts);
+                    return null;
                 }
                 catch (Exception ex)
                 {
