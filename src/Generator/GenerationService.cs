@@ -114,73 +114,112 @@ namespace TypeScriptDefinitionGenerator
         {
             if (csItem == null) return;
 
-            string dtsFile = GenerateFileName(csItem);
-            string dtsFileName = Path.GetFileName(dtsFile);
-            Project project = csItem.ContainingProject; // Get the parent project
-
-            // 1. Add the generated file to the project's ROOT if it's not already there.
-            // THIS IS THE KEY CHANGE. We always add to the project, not the csItem.
-            if (VSHelpers.GetProjectItem(dtsFile) == null)
-            {
-                project.ProjectItems.AddFromFile(dtsFile);
-            }
-
-            // 2. Get a handle to the generated .d.ts project item.
-            var dtsItem = VSHelpers.GetProjectItem(dtsFile);
-
-            // 3. Set properties on the C# source item. (This part is correct)
             try
             {
-                var customToolProp = csItem.Properties.Item("CustomTool");
-                if (customToolProp.Value?.ToString() != DtsGenerator.Name)
+                string dtsFile = GenerateFileName(csItem); // This is the absolute physical path
+                Project project = csItem.ContainingProject;
+                string projectRoot = Options.GetProjectRoot(project);
+
+                string csSourcePath = csItem.FileNames[1];
+                string csRelativePath = csSourcePath;
+                if (!string.IsNullOrEmpty(projectRoot) && csSourcePath.StartsWith(projectRoot, StringComparison.OrdinalIgnoreCase))
                 {
-                    customToolProp.Value = DtsGenerator.Name;
+                    csRelativePath = csSourcePath.Substring(projectRoot.Length).TrimStart('\\', '/');
                 }
 
-                var lastGenOutputProp = csItem.Properties.Item("LastGenOutput");
-                if (lastGenOutputProp.Value?.ToString() != dtsFileName)
+                string dtsLinkPath = Path.ChangeExtension(csRelativePath, Constants.FileExtension);
+                if (Options.WebEssentials2015)
+                    dtsLinkPath = csRelativePath + Constants.FileExtension;
+
+                // Get a handle to the .d.ts project item.
+                //var dtsItem = VSHelpers.GetProjectItem(dtsFile);
+
+                //// 1. Add the generated file to the project's ROOT if it's not already there.
+                //if (dtsItem == null)
+                //{
+                //    dtsItem = project.ProjectItems.AddFromFile(dtsFile);
+                //}
+
+                //// 2. Calculate the source file's path relative to the project root.
+                //// This will be used for the <Link> metadata and DependentUpon.
+            
+
+                //// 3. Set properties on the .d.ts generated item.
+                //if (dtsItem != null)
+                //{
+                //    try
+                //    {
+                //        // Set the <Link> property to preserve the folder structure in Solution Explorer.
+                //        // We want the linked file to appear at the same relative path as the source .cs file.
+                    
+
+                //        dtsItem.Properties.Item("Link").Value = dtsLinkPath;
+
+                //        // Set DependentUpon using the relative path of the source .cs file.
+                //        dtsItem.Properties.Item("DependentUpon").Value = csRelativePath;
+
+                //        // These properties set <DesignTime> and <AutoGen>.
+                //        dtsItem.Properties.Item("DesignTime").Value = true;
+                //        dtsItem.Properties.Item("AutoGen").Value = true;
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        VSHelpers.WriteOnOutputWindow($"Warning: Could not set nesting/link properties for '{Path.GetFileName(dtsFile)}'. {ex.Message}");
+                //    }
+                //}
+
+            // 4. Set properties on the C# source item.          
+                csItem.Properties.Item("CustomTool").Value = DtsGenerator.Name;
+
+                // Set LastGenOutput to the physical path of the .d.ts file.
+                // For SDK projects, this should be the full path that appears in the <None Include="..."> tag.
+                string dtsRelativePathForInclude = dtsFile;
+                if (!string.IsNullOrEmpty(projectRoot) && dtsFile.StartsWith(projectRoot, StringComparison.OrdinalIgnoreCase))
                 {
-                    lastGenOutputProp.Value = dtsFileName;
+                    dtsRelativePathForInclude = dtsFile.Substring(projectRoot.Length).TrimStart('\\', '/');
                 }
+                else
+                {
+                    // If outside the project, create a relative path from the project file location
+                    Uri projectUri = new Uri(project.FullName);
+                    Uri fileUri = new Uri(dtsFile);
+                    dtsRelativePathForInclude = Uri.UnescapeDataString(projectUri.MakeRelativeUri(fileUri).ToString()).Replace('/', '\\');
+                }
+
+                csItem.Properties.Item("LastGenOutput").Value = dtsRelativePathForInclude;
             }
             catch (Exception ex)
             {
                 VSHelpers.WriteOnOutputWindow($"Warning: Could not set generator properties on '{csItem.Name}'. {ex.Message}");
-            }
-
-            // 4. Set properties on the .d.ts generated item for nesting. (This part is correct)
-            if (dtsItem != null)
-            {
-                try
-                {
-                    // The DependentUpon property is what creates the visual nesting in Solution Explorer.
-                    // It works correctly even if the files are in different directories.
-                    var dependentUponProp = dtsItem.Properties.Item("DependentUpon");
-                    if (dependentUponProp.Value?.ToString() != csItem.Name)
-                    {
-                        dependentUponProp.Value = csItem.Name;
-                    }
-
-                    dtsItem.Properties.Item("DesignTime").Value = true;
-                    dtsItem.Properties.Item("AutoGen").Value = true;
-                }
-                catch (Exception ex)
-                {
-                    VSHelpers.WriteOnOutputWindow($"Warning: Could not set nesting properties for '{dtsFileName}'. {ex.Message}");
-                }
             }
         }
 
         public static void DisableSyncForProjectItem(ProjectItem csItem)
         {
             if (csItem == null) return;
-            string dtsFile = GenerateFileName(csItem);
+
+            // Use LastGenOutput to find the exact path of the file to delete, as this is the most reliable source.
+            string dtsFileToDelete = "";
+            try
+            {
+                dtsFileToDelete = csItem.Properties.Item("LastGenOutput").Value.ToString();
+                if (!Path.IsPathRooted(dtsFileToDelete))
+                {
+                    string projectDir = Path.GetDirectoryName(csItem.ContainingProject.FullName);
+                    dtsFileToDelete = Path.GetFullPath(Path.Combine(projectDir, dtsFileToDelete));
+                }
+            }
+            catch
+            {
+                // Fallback if LastGenOutput isn't set for some reason.
+                dtsFileToDelete = GenerateFileName(csItem);
+            }
 
             // 1. Delete the generated file from the project and disk.
-            VSHelpers.GetProjectItem(dtsFile)?.Delete();
-            if (File.Exists(dtsFile))
+            VSHelpers.GetProjectItem(dtsFileToDelete)?.Delete();
+            if (File.Exists(dtsFileToDelete))
             {
-                try { File.Delete(dtsFile); } catch { /* Ignore */ }
+                try { File.Delete(dtsFileToDelete); } catch { /* Ignore */ }
             }
 
             // 2. Clear the properties on the C# source item.
