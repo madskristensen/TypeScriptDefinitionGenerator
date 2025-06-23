@@ -22,7 +22,7 @@ namespace TypeScriptDefinitionGenerator
             {
                 if (!Options.GlobalScope)
                 {
-                    if (!Options.UseNamespaceInsteadofModule)
+                    if (Options.UseNamespaceInsteadofModule)
                     {
                         sb.AppendFormat("declare namespace {0} {{\r\n", ns.Key);
                     }
