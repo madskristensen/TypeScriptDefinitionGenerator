@@ -47,31 +47,33 @@ namespace TypeScriptDefinitionGenerator
 
         private void BeforeQueryStatus(object sender, EventArgs e)
         {
+            // ... (BeforeQueryStatus logic is the same and correct)
             var button = (OleMenuCommand)sender;
             button.Visible = button.Enabled = false;
 
-            if (_dte.SelectedItems.Count != 1)
-                return;
+            if (_dte.SelectedItems.Count != 1) return;
 
             _item = _dte.SelectedItems?.Item(1)?.ProjectItem;
+            if (_item == null) return;
+
             Options.ReadOptionOverrides(_item, false);
 
-            if (_item == null || _item.ContainingProject == null || _item.FileCodeModel == null)
-                return;
+            if (_item.ContainingProject == null || _item.FileCodeModel == null) return;
 
             var fileName = _item.FileNames[1];
             var ext = Path.GetExtension(fileName);
 
             if (Constants.SupportedSourceExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
             {
-                if (_item.ContainingProject.IsKind(ProjectTypes.DOTNET_Core, ProjectTypes.ASPNET_5, ProjectTypes.WEBSITE_PROJECT))
+                // The 'checked' state is now unified. We just check the CustomTool property.
+                try
                 {
-                    string dtsFile = GenerationService.GenerateFileName(_item.FileNames[1]);
-                    button.Checked = File.Exists(dtsFile);
+                    var customToolProp = _item.Properties.Item("CustomTool");
+                    button.Checked = customToolProp?.Value?.ToString() == DtsGenerator.Name;
                 }
-                else
+                catch
                 {
-                    button.Checked = _item.Properties.Item("CustomTool").Value.ToString() == DtsGenerator.Name;
+                    button.Checked = false; // Property doesn't exist
                 }
 
                 button.Visible = button.Enabled = true;
@@ -80,37 +82,28 @@ namespace TypeScriptDefinitionGenerator
 
         private void Execute(object sender, EventArgs e)
         {
-            Options.ReadOptionOverrides(_item, false);
-            // .NET Core and Website projects
-            if (_item.ContainingProject.IsKind(ProjectTypes.DOTNET_Core, ProjectTypes.ASPNET_5, ProjectTypes.WEBSITE_PROJECT))
-            {
-                string dtsFile = GenerationService.GenerateFileName(_item.FileNames[1]);
-                bool synOn = File.Exists(dtsFile);
+            Options.ReadOptionOverrides(_item, true);
 
-                if (synOn)
-                {
-                    var dtsItem = VSHelpers.GetProjectItem(dtsFile);
-                    dtsItem?.Delete();
-                    File.Delete(dtsFile);
-                }
-                else
-                {
-                    GenerationService.CreateDtsFile(_item);
-                }
+            // SIMPLIFIED LOGIC: The logic is now the same for all project types.
+            bool isSynced;
+            try
+            {
+                var customToolProp = _item.Properties.Item("CustomTool");
+                isSynced = customToolProp?.Value?.ToString() == DtsGenerator.Name;
             }
-            // Legacy .NET projects
+            catch { isSynced = false; }
+
+
+            if (isSynced)
+            {
+                // Call the new helper to turn off sync.
+                GenerationService.DisableSyncForProjectItem(_item);
+            }
             else
             {
-                bool synOn = _item.Properties.Item("CustomTool").Value.ToString() == DtsGenerator.Name;
-
-                if (synOn)
-                {
-                    _item.Properties.Item("CustomTool").Value = "";
-                }
-                else
-                {
-                    _item.Properties.Item("CustomTool").Value = DtsGenerator.Name;
-                }
+                // Call the main generation method. This will generate for the item
+                // and all its dependencies, and it will also enable sync for all of them.
+                GenerationService.GenerateFromProjectItem(_item);
             }
         }
     }

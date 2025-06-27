@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 
 namespace TypeScriptDefinitionGenerator
 {
@@ -17,6 +18,9 @@ namespace TypeScriptDefinitionGenerator
         internal const bool _defGlobalScope = false;
         internal const bool _defWebEssentials2015 = true;
         internal const string _defModuleName = "server";
+        internal const string _defOutputPath = "";
+        internal const bool _defUseCSharpNamespace = false;
+        internal const bool _defUseNamespaceInsteadofModule = false;
 
         [Category("Casing")]
         [DisplayName("Camel case enum values")]
@@ -39,6 +43,17 @@ namespace TypeScriptDefinitionGenerator
         public string DefaultModuleName { get; set; } = _defModuleName;
 
         [Category("Settings")]
+        [DisplayName("Use C# Namespace")]
+        [Description("If true, the generated TypeScript module will use the C# namespace of the class instead of the 'Default Module name'.")]
+        [DefaultValue(_defUseCSharpNamespace)]
+        public bool UseCSharpNamespace { get; set; } = _defUseCSharpNamespace;
+
+        [Category("Settings")]
+        [DisplayName("Output Path")]
+        [Description("The root folder to save generated .d.ts files. If empty, files are saved next to the source. Subfolders will be created to match the source file's structure. Ex: 'scripts/typings/'")]
+        public string OutputPath { get; set; } = _defOutputPath;
+
+        [Category("Settings")]
         [DisplayName("Class instead of Interface")]
         [Description("Controls whether to generate a class or an interface: default is an Interface")]
         [DefaultValue(_defClassInsteadOfInterface)]
@@ -56,6 +71,11 @@ namespace TypeScriptDefinitionGenerator
         [DefaultValue(_defGlobalScope)]
         public bool GlobalScope { get; set; } = _defGlobalScope;
 
+        [Category("Settings")]
+        [DisplayName("Use Namespace instead of Module")]
+        [Description("Controls whether to generate a namespace instead of a module: default is a module")]
+        [DefaultValue(_defUseNamespaceInsteadofModule)]
+        public bool UseNamespaceInsteadofModule { get; set; } = _defUseNamespaceInsteadofModule;
 
         [Category("Compatibilty")]
         [DisplayName("Web Essentials 2015 file names")]
@@ -132,58 +152,68 @@ namespace TypeScriptDefinitionGenerator
             }
         }
 
-        public static void ReadOptionOverrides(ProjectItem sourceItem, bool display = true)
+        static public string OutputPath => overrides?.OutputPath ?? DtsPackage.Options.OutputPath;
+        static public bool UseCSharpNamespace => overrides?.UseCSharpNamespace ?? DtsPackage.Options.UseCSharpNamespace;
+
+        static public bool UseNamespaceInsteadofModule => overrides?.UseNamespaceInsteadofModule ?? DtsPackage.Options.UseNamespaceInsteadofModule;
+
+        public static string GetProjectRoot(Project project)
         {
-            Project proj = sourceItem.ContainingProject;
+            if (project == null) return null;
 
-            string jsonName = "";
-
-            foreach (ProjectItem item in proj.ProjectItems)
+            if (project.IsKind(ProjectTypes.WEBSITE_PROJECT))
             {
-                if (item.Name.ToLower() == OVERRIDE_FILE_NAME.ToLower())
-                {
-                    jsonName = item.FileNames[0];
-                    break;
-                }
+                // Website projects don't have a project file, root is the folder
+                return project.FullName;
             }
 
-            if (!string.IsNullOrEmpty(jsonName))
+            return Path.GetDirectoryName(project.FullName);
+        }
+
+        public static void ReadOptionOverrides(ProjectItem sourceItem, bool display = true)
+        {
+            if (sourceItem?.ContainingProject == null)
             {
-                // it has been modified since last read - so read again
+                overrides = null;
+                return;
+            }
+
+            Project proj = sourceItem.ContainingProject;
+            string jsonName = "";
+
+            // --- Simplified search for override file ---
+            var overrideItem = proj.ProjectItems.Cast<ProjectItem>().FirstOrDefault(item => item.Name.Equals(OVERRIDE_FILE_NAME, StringComparison.OrdinalIgnoreCase));
+            if (overrideItem != null)
+            {
+                jsonName = overrideItem.FileNames[0];
+            }
+
+            if (!string.IsNullOrEmpty(jsonName) && File.Exists(jsonName))
+            {
                 try
                 {
                     overrides = JsonConvert.DeserializeObject<OptionsOverride>(File.ReadAllText(jsonName));
                     if (display)
                     {
-                        VSHelpers.WriteOnOutputWindow(string.Format("Override file processed: {0}", jsonName));
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine(string.Format("Override file processed: {0}", jsonName));
+                        VSHelpers.WriteOnOutputWindow($"Override file processed: {jsonName}");
                     }
                 }
-                catch (Exception e) when (e is Newtonsoft.Json.JsonReaderException || e is Newtonsoft.Json.JsonSerializationException)
+                catch (Exception e) when (e is JsonReaderException || e is JsonSerializationException)
                 {
-                    overrides = null; // incase the read fails
-                    VSHelpers.WriteOnOutputWindow(string.Format("Error in Override file: {0}", jsonName));
+                    overrides = null;
+                    VSHelpers.WriteOnOutputWindow($"Error in Override file: {jsonName}");
                     VSHelpers.WriteOnOutputWindow(e.Message);
-                    throw;
                 }
             }
             else
             {
-                if (display)
+                if (display && overrides != null) // Only display if it's changing state
                 {
                     VSHelpers.WriteOnOutputWindow("Using Global Settings");
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("Using Global Settings");
                 }
                 overrides = null;
             }
         }
-
     }
 
     internal class OptionsOverride
@@ -211,6 +241,10 @@ namespace TypeScriptDefinitionGenerator
 
         //        [JsonRequired]
         public bool WebEssentials2015 { get; set; } = OptionsDialogPage._defWebEssentials2015;
+
+        public string OutputPath { get; set; }
+        public bool? UseCSharpNamespace { get; set; }
+        public bool? UseNamespaceInsteadofModule { get; set; }
 
     }
 

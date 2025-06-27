@@ -111,6 +111,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="envdte">
+      <Version>17.14.40260</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.SDK" ExcludeAssets="runtime">
       <Version>17.0.32112.339</Version>
     </PackageReference>
@@ -118,6 +121,9 @@
       <Version>17.1.4054</Version>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="System.IO.Hashing">
+      <Version>9.0.6</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

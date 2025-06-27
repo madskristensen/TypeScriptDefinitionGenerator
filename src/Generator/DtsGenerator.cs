@@ -36,12 +36,14 @@ namespace TypeScriptDefinitionGenerator
             {
                 try
                 {
-                    var dts = GenerationService.ConvertToTypeScript(item);
+                    var dts = GenerationService.GenerateFromProjectItem(item);
 
-                    return Encoding.UTF8.GetBytes(dts);
+                    return null;
                 }
                 catch (Exception ex)
-                { }
+                {
+                    VSHelpers.WriteOnOutputWindow($"Error during custom tool generation for {inputFileName}: {ex}");
+                }
                     
             }
 

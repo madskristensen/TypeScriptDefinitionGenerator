@@ -1,6 +1,8 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Hashing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
@@ -8,6 +10,8 @@ using System.Xml.Linq;
 using EnvDTE;
 using EnvDTE80;
 using TypeScriptDefinitionGenerator.Helpers;
+using CodeAttributeArgument = EnvDTE80.CodeAttributeArgument;
+using CodeNamespace = EnvDTE.CodeNamespace;
 
 namespace TypeScriptDefinitionGenerator
 {
@@ -23,105 +27,94 @@ namespace TypeScriptDefinitionGenerator
         //    public const string TypeScript = ".d.ts";
         //}
 
-        internal static IEnumerable<IntellisenseObject> ProcessFile(ProjectItem item, HashSet<CodeClass> underProcess = null)
+        public static Dictionary<ProjectItem, List<IntellisenseObject>> ProcessFile(ProjectItem item)
         {
-            if (item.FileCodeModel == null || item.ContainingProject == null)
+            var resultsByFile = new Dictionary<ProjectItem, List<IntellisenseObject>>();
+            var processedTypes = new HashSet<string>(); // Keep track of full type names we've already processed
+
+            ProcessProjectItem(item, resultsByFile, processedTypes);
+
+            return resultsByFile;
+        }
+
+        private static void ProcessProjectItem(ProjectItem item, Dictionary<ProjectItem, List<IntellisenseObject>> resultsByFile, HashSet<string> processedTypes)
+        {
+            if (item?.FileCodeModel == null || item.ContainingProject == null) return;
+            if (resultsByFile.ContainsKey(item)) return; // Already processed or in-progress
+
+            string sourcePath = item.FileNames[1];
+            string dtsPath = GenerationService.GenerateFileName(item);
+
+            if (File.Exists(dtsPath))
             {
-                return null;
+                string firstLine = File.ReadLines(dtsPath).FirstOrDefault();
+                if (firstLine != null && firstLine.StartsWith("//#hash:"))
+                {
+                    string oldHash = firstLine.Substring(8).Trim();
+                    string newHash = CalculateFileHash(sourcePath);
+
+                    if (oldHash == newHash)
+                    {
+                        // The file is unchanged, we can skip it completely.
+                        VSHelpers.WriteOnOutputWindow($"   -> Skipping '{item.Name}' (unchanged).");
+                        return;
+                    }
+                }
             }
 
+            var fileObjects = new List<IntellisenseObject>();
+            resultsByFile[item] = fileObjects;
             _project = item.ContainingProject;
-
-            var list = new List<IntellisenseObject>();
-
-            if (underProcess == null)
-            {
-                underProcess = new HashSet<CodeClass>();
-            }
 
             foreach (CodeElement element in item.FileCodeModel.CodeElements)
             {
-                if (element.Kind == vsCMElement.vsCMElementNamespace)
-                {
-                    var cn = (CodeNamespace)element;
+                ProcessCodeElement(element, item, resultsByFile, processedTypes);
+            }
+        }
 
-                    foreach (CodeElement member in cn.Members)
-                    {
-                        if (ShouldProcess(member))
-                        {
-                            ProcessElement(member, list, underProcess);
-                        }
-                    }
-                }
-                else if (ShouldProcess(element))
-                {
-                    ProcessElement(element, list, underProcess);
-                }
+        public static string CalculateFileHash(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                return string.Empty;
             }
 
-            return new HashSet<IntellisenseObject>(list);
+            byte[] fileBytes = File.ReadAllBytes(filePath);
+            var hash = XxHash64.Hash(fileBytes);
+
+            return Convert.ToBase64String(hash);
         }
-        private static void ProcessElement(CodeElement element, List<IntellisenseObject> list, HashSet<CodeClass> underProcess)
+
+        private static void ProcessCodeElement(CodeElement element, ProjectItem currentItem, Dictionary<ProjectItem, List<IntellisenseObject>> resultsByFile, HashSet<string> processedTypes)
         {
-            if (element.Kind == vsCMElement.vsCMElementEnum)
+            if (element.Kind == vsCMElement.vsCMElementNamespace)
             {
-                ProcessEnum((CodeEnum)element, list);
+                foreach (CodeElement member in ((CodeNamespace)element).Members)
+                {
+                    ProcessCodeElement(member, currentItem, resultsByFile, processedTypes);
+                }
+            }
+            else if (element.Kind == vsCMElement.vsCMElementEnum)
+            {
+                ProcessEnum((CodeEnum)element, currentItem, resultsByFile, processedTypes);
             }
             else if (element.Kind == vsCMElement.vsCMElementClass)
             {
-                var cc = (CodeClass)element;
-
-                // Don't re-generate the intellisense.
-                if (list.Any(x => x.Name == GetClassName(cc) && x.Namespace == GetNamespace(cc)))
-                {
-                    return;
-                }
-
-                // Collect inherit classes.
-                CodeClass baseClass = null;
-
-                try
-                {
-                    // To recuse from throwing from a weird case
-                    // where user inherit class from struct and save. As such inheritance is disallowed.
-                    baseClass = cc.Bases.Cast<CodeClass>()
-                                  .FirstOrDefault(c => c.FullName != "System.Object");
-                }
-                catch { /* Silently continue. */ }
-
-                ProcessClass(cc, baseClass, list, underProcess);
-
-                var references = new HashSet<string>();
-                try
-                {
-                    // Process Inheritence.
-                    if (baseClass != null && !underProcess.Contains(baseClass) && !HasIntellisense(baseClass.ProjectItem, references))
-                    {
-                        list.Last().UpdateReferences(references);
-                        underProcess.Add(baseClass);
-                        list.AddRange(ProcessFile(baseClass.ProjectItem, underProcess));
-                    }
-                }
-                catch
-                {
-
-                }
+                ProcessClass((CodeClass)element, currentItem, resultsByFile, processedTypes);
             }
         }
 
-        private static bool ShouldProcess(CodeElement member)
-        {
-            return
-                    member.Kind == vsCMElement.vsCMElementClass
-                    || member.Kind == vsCMElement.vsCMElementEnum;
-        }
+        private static bool ShouldProcess(CodeElement member) => member.Kind == vsCMElement.vsCMElementClass || member.Kind == vsCMElement.vsCMElementEnum;
 
-        private static void ProcessEnum(CodeEnum element, List<IntellisenseObject> list)
+        private static void ProcessEnum(CodeEnum element, ProjectItem currentItem, Dictionary<ProjectItem, List<IntellisenseObject>> resultsByFile, HashSet<string> processedTypes)
         {
+            if (processedTypes.Contains(element.FullName)) return;
+            processedTypes.Add(element.FullName);
+
             var data = new IntellisenseObject
             {
                 Name = element.Name,
-                IsEnum = element.Kind == vsCMElement.vsCMElementEnum,
+                IsEnum = true,
                 FullName = element.FullName,
                 Namespace = GetNamespace(element),
                 Summary = GetSummary(element)
@@ -129,59 +122,61 @@ namespace TypeScriptDefinitionGenerator
 
             foreach (CodeVariable codeEnum in element.Members.OfType<CodeVariable>())
             {
-                var prop = new IntellisenseProperty
+                data.Properties.Add(new IntellisenseProperty
                 {
                     Name = codeEnum.Name,
                     Summary = GetSummary(codeEnum),
                     InitExpression = GetInitializer(codeEnum.InitExpression)
-                };
-
-                data.Properties.Add(prop);
+                });
             }
 
-            if (data.Properties.Count > 0)
+            if (data.Properties.Any())
             {
-                list.Add(data);
+                resultsByFile[currentItem].Add(data); // Add to the list for the current file
             }
         }
 
-        private static void ProcessClass(CodeClass cc, CodeClass baseClass, List<IntellisenseObject> list, HashSet<CodeClass> underProcess)
+        private static void ProcessClass(CodeClass cc, ProjectItem currentItem, Dictionary<ProjectItem, List<IntellisenseObject>> resultsByFile, HashSet<string> processedTypes)
         {
-            string baseNs = null;
-            string baseClassName = null;
-            var ns = GetNamespace(cc);
-            var className = GetClassName(cc);
-            var references = new HashSet<string>();
-            IList<IntellisenseProperty> properties = GetProperties(cc.Members, new HashSet<string>(), references).ToList();
+            if (processedTypes.Contains(cc.FullName)) return;
+            processedTypes.Add(cc.FullName);
 
+            // Recursively process nested types first
             foreach (CodeElement member in cc.Members)
             {
                 if (ShouldProcess(member))
                 {
-                    ProcessElement(member, list, underProcess);
+                    ProcessCodeElement(member, currentItem, resultsByFile, processedTypes);
                 }
             }
 
-            if (baseClass != null)
+            CodeClass baseClass = cc.Bases.Cast<CodeElement>().OfType<CodeClass>().FirstOrDefault(c => c.Kind == vsCMElement.vsCMElementClass && c.FullName != "System.Object");
+
+            // Recursively process the base class if it's in the project
+            if (baseClass?.InfoLocation == vsCMInfoLocation.vsCMInfoLocationProject)
             {
-                baseClassName = GetClassName(baseClass);
-                baseNs = GetNamespace(baseClass);
+                ProcessProjectItem(baseClass.ProjectItem, resultsByFile, processedTypes);
             }
 
-            var intellisenseObject = new IntellisenseObject(properties.ToList(), references)
+            var ns = GetNamespace(cc);
+            var className = GetClassName(cc);
+            var references = new HashSet<string>();
+            var properties = GetProperties(cc, cc.Members, new HashSet<string>(), references, resultsByFile, processedTypes).ToList();
+
+            var intellisenseObject = new IntellisenseObject(properties, references)
             {
                 Namespace = ns,
                 Name = className,
-                BaseNamespace = baseNs,
-                BaseName = baseClassName,
+                BaseNamespace = baseClass != null ? GetNamespace(baseClass) : null,
+                BaseName = baseClass != null ? GetClassName(baseClass) : null,
                 FullName = cc.FullName,
                 Summary = GetSummary(cc)
             };
 
-            list.Add(intellisenseObject);
+            resultsByFile[currentItem].Add(intellisenseObject);
         }
 
-        private static IEnumerable<IntellisenseProperty> GetProperties(CodeElements props, HashSet<string> traversedTypes, HashSet<string> references = null)
+        private static IEnumerable<IntellisenseProperty> GetProperties(CodeClass rootClass, CodeElements props, HashSet<string> traversedTypes, HashSet<string> references, Dictionary<ProjectItem, List<IntellisenseObject>> resultsByFile, HashSet<string> processedTypes)
         {
             return from p in props.OfType<CodeProperty>()
                    where !p.Attributes.Cast<CodeAttribute>().Any(HasIgnoreAttribute)
@@ -189,58 +184,43 @@ namespace TypeScriptDefinitionGenerator
                    select new IntellisenseProperty
                    {
                        Name = GetName(p),
-                       Type = GetType(p.Parent, p.Type, traversedTypes, references),
+                       Type = GetType(rootClass, p.Type, traversedTypes, references, resultsByFile, processedTypes),
                        Summary = GetSummary(p)
                    };
         }
 
         private static bool HasIgnoreAttribute(CodeAttribute attribute)
         {
-            return attribute.FullName == "System.Runtime.Serialization.IgnoreDataMemberAttribute" ||
-                   attribute.FullName == "Newtonsoft.Json.JsonIgnoreAttribute" ||
-                   attribute.FullName == "System.Web.Script.Serialization.ScriptIgnoreAttribute";
+            string fullName = attribute.FullName;
+            return fullName == "System.Runtime.Serialization.IgnoreDataMemberAttribute" ||
+                   fullName == "Newtonsoft.Json.JsonIgnoreAttribute" ||
+                   fullName == "System.Web.Script.Serialization.ScriptIgnoreAttribute";
         }
 
         private static bool IsPublic(CodeFunction cf)
         {
-            vsCMElement fun = cf.Kind;
-
-            var retVal = false;
             try
             {
-                retVal = cf.Access == vsCMAccess.vsCMAccessPublic;
+                return cf.Access == vsCMAccess.vsCMAccessPublic;
             }
             catch (COMException)
             {
-                var cp = cf.Parent as CodeProperty;
-                if (cp != null)
+                if (cf.Parent is CodeProperty cp)
                 {
-                    retVal = cp.Access == vsCMAccess.vsCMAccessPublic;
+                    return cp.Access == vsCMAccess.vsCMAccessPublic;
                 }
-
             }
-            return retVal;
+            return false;
         }
 
-        private static string GetClassName(CodeClass cc)
-        {
-            return GetDataContractName(cc, "Name") ?? cc.Name;
-        }
-
-        private static string GetNamespace(CodeClass cc)
-        {
-            return GetDataContractName(cc, "Namespace") ?? GetNamespace(cc.Attributes);
-        }
+        private static string GetClassName(CodeClass cc) => GetDataContractName(cc, "Name") ?? cc.Name;
+        private static string GetNamespace(CodeClass cc) => Options.UseCSharpNamespace ? cc.Namespace.FullName : (GetDataContractName(cc, "Namespace") ?? GetNamespace(cc.Attributes));
+        private static string GetNamespace(CodeEnum ce) => Options.UseCSharpNamespace ? ce.Namespace.FullName : (GetDataContractName(ce, "Namespace") ?? GetNamespace(ce.Attributes));
 
         private static string GetDataContractName(CodeClass cc, string attrName)
         {
             IEnumerable<CodeAttribute> dataContractAttribute = cc.Attributes.Cast<CodeAttribute>().Where(a => a.Name == "DataContract");
             return GetDataContractNameInner(dataContractAttribute, attrName);
-        }
-
-        private static string GetNamespace(CodeEnum cc)
-        {
-            return GetDataContractName(cc, "Namespace") ?? GetNamespace(cc.Attributes);
         }
         private static string GetDataContractName(CodeEnum cc, string attrName)
         {
@@ -249,98 +229,79 @@ namespace TypeScriptDefinitionGenerator
         }
         private static string GetDataContractNameInner(IEnumerable<CodeAttribute> dataContractAttribute, string attrName)
         {
-            if (!dataContractAttribute.Any())
-            {
-                return null;
-            }
-
-            string name = null;
+            if (!dataContractAttribute.Any()) return null;
             var keyValues = dataContractAttribute.First().Children.OfType<CodeAttributeArgument>()
                            .ToDictionary(a => a.Name, a => (a.Value ?? "").Trim('\"', '\''));
-
-            if (keyValues.ContainsKey(attrName))
-            {
-                name = keyValues[attrName];
-            }
-
-            return name;
+            return keyValues.TryGetValue(attrName, out var name) ? name : null;
         }
-
         private static string GetNamespace(CodeElements attrs)
         {
-            if (attrs == null)
-            {
-                return DefaultModuleName;
-            }
+            if (attrs == null) return Options.DefaultModuleName;
 
-            IEnumerable<string> namespaceFromAttr = from a in attrs.Cast<CodeAttribute2>()
-                                                    where a.Name.EndsWith(ModuleNameAttributeName, StringComparison.OrdinalIgnoreCase)
-                                                    from arg in a.Arguments.Cast<CodeAttributeArgument>()
-                                                    let v = (arg.Value ?? "").Trim('\"')
-                                                    where !string.IsNullOrWhiteSpace(v)
-                                                    select v;
-
-            return namespaceFromAttr.FirstOrDefault() ?? DefaultModuleName;
+            return (from a in attrs.Cast<CodeAttribute2>()
+                    where a.Name.EndsWith("TypeScriptModule", StringComparison.OrdinalIgnoreCase)
+                    from arg in a.Arguments.Cast<CodeAttributeArgument>()
+                    let v = (arg.Value ?? "").Trim('\"')
+                    where !string.IsNullOrWhiteSpace(v)
+                    select v).FirstOrDefault() ?? Options.DefaultModuleName;
         }
 
-        private static IntellisenseType GetType(CodeClass rootElement, CodeTypeRef codeTypeRef, HashSet<string> traversedTypes, HashSet<string> references)
+        private static IntellisenseType GetType(CodeClass rootElement, CodeTypeRef codeTypeRef, HashSet<string> traversedTypes, HashSet<string> references, Dictionary<ProjectItem, List<IntellisenseObject>> resultsByFile, HashSet<string> processedTypes)
         {
+            // ... (initial type deduction logic is the same)
             var isArray = codeTypeRef.TypeKind == vsCMTypeRef.vsCMTypeRefArray;
-            var isCollection = codeTypeRef.AsString.StartsWith("System.Collections", StringComparison.Ordinal);
+            var isCollection = !isArray && codeTypeRef.AsString.StartsWith("System.Collections", StringComparison.Ordinal);
             var isDictionary = false;
 
             CodeTypeRef effectiveTypeRef = codeTypeRef;
-            if (isArray && codeTypeRef.ElementType != null)
+            if (isArray)
             {
-                effectiveTypeRef = effectiveTypeRef.ElementType;
+                effectiveTypeRef = codeTypeRef.ElementType;
             }
             else if (isCollection)
             {
-                effectiveTypeRef = TryToGuessGenericArgument(rootElement, effectiveTypeRef);
-            }
-
-            if (isCollection)
-            {
-                isDictionary = codeTypeRef.AsString.StartsWith("System.Collections.Generic.Dictionary", StringComparison.Ordinal)
-                            || codeTypeRef.AsString.StartsWith("System.Collections.Generic.IDictionary", StringComparison.Ordinal);
+                effectiveTypeRef = TryToGuessGenericArgument(rootElement, codeTypeRef);
+                isDictionary = effectiveTypeRef.AsString.Contains("KeyValuePair") || codeTypeRef.AsString.Contains("Dictionary");
             }
 
             var typeName = effectiveTypeRef.AsFullName;
 
             try
             {
-
                 var codeClass = effectiveTypeRef.CodeType as CodeClass2;
                 var codeEnum = effectiveTypeRef.CodeType as CodeEnum;
                 var isPrimitive = IsPrimitive(effectiveTypeRef);
+
+                // If it's a type from our project, ensure it gets processed.
+                if (!isPrimitive && effectiveTypeRef.CodeType?.InfoLocation == vsCMInfoLocation.vsCMInfoLocationProject)
+                {
+                    // This is the key recursive call. It will populate the resultsByFile dictionary
+                    // for the dependent type if it hasn't been processed yet.
+                    ProcessProjectItem(effectiveTypeRef.CodeType.ProjectItem, resultsByFile, processedTypes);
+                }
 
                 var result = new IntellisenseType
                 {
                     IsArray = !isDictionary && (isArray || isCollection),
                     IsDictionary = isDictionary,
                     CodeName = effectiveTypeRef.AsString,
-                    ClientSideReferenceName =
-                        effectiveTypeRef.TypeKind == vsCMTypeRef.vsCMTypeRefCodeType &&
-                        effectiveTypeRef.CodeType.InfoLocation == vsCMInfoLocation.vsCMInfoLocationProject
-                        ?
-                            (codeClass != null && HasIntellisense(codeClass.ProjectItem, references) ? (GetNamespace(codeClass) + "." + Utility.CamelCaseClassName(GetClassName(codeClass))) : null) ??
-                            (codeEnum != null && HasIntellisense(codeEnum.ProjectItem, references) ? (GetNamespace(codeEnum) + "." + Utility.CamelCaseClassName(codeEnum.Name)) : null)
-                        : null
                 };
 
-                if (!isPrimitive && codeClass != null && !traversedTypes.Contains(effectiveTypeRef.CodeType.FullName) && !isCollection)
+                if (codeClass != null)
                 {
-                    traversedTypes.Add(effectiveTypeRef.CodeType.FullName);
-                    result.Shape = GetProperties(effectiveTypeRef.CodeType.Members, traversedTypes, references).ToList();
-                    traversedTypes.Remove(effectiveTypeRef.CodeType.FullName);
+                    result.ClientSideReferenceName = GetNamespace(codeClass) + "." + Utility.CamelCaseClassName(GetClassName(codeClass));
+                }
+                else if (codeEnum != null)
+                {
+                    result.ClientSideReferenceName = GetNamespace(codeEnum) + "." + Utility.CamelCaseClassName(codeEnum.Name);
                 }
 
                 return result;
             }
-            catch (InvalidCastException)
+            catch (Exception ex)
             {
-                VSHelpers.WriteOnOutputWindow(string.Format("ERROR - Cannot find definition for {0}", typeName));
-                throw new ArgumentException(string.Format("Cannot find definition of {0}", typeName));
+                VSHelpers.WriteOnOutputWindow($"ERROR - Could not resolve type '{typeName}'. It will be treated as 'any'. Details: {ex.Message}");
+                return new IntellisenseType { CodeName = "any" }; // Fallback to any
             }
         }
 
@@ -417,22 +378,6 @@ namespace TypeScriptDefinitionGenerator
             if (codeTypeRef.AsString.EndsWith("DateTime", StringComparison.Ordinal))
             {
                 return true;
-            }
-
-            return false;
-        }
-
-        private static bool HasIntellisense(ProjectItem projectItem, HashSet<string> references)
-        {
-            for (short i = 0; i < projectItem.FileCount; i++)
-            {
-                var fileName = GenerationService.GenerateFileName(projectItem.FileNames[i]);
-
-                if (File.Exists(fileName))
-                {
-                    references.Add(fileName);
-                    return true;
-                }
             }
 
             return false;

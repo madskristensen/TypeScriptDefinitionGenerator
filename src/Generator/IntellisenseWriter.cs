@@ -12,15 +12,24 @@ namespace TypeScriptDefinitionGenerator
     {
         private static readonly Regex _whitespaceTrimmer = new Regex(@"^\s+|\s+$|\s*[\r\n]+\s*", RegexOptions.Compiled);
 
-        public static string WriteTypeScript(IEnumerable<IntellisenseObject> objects)
+        public static string WriteTypeScript(IEnumerable<IntellisenseObject> objects, string sourceFileHash)
         {
             var sb = new StringBuilder();
+
+            sb.AppendFormat("//#hash:{0}\r\n", sourceFileHash);
 
             foreach (IGrouping<string, IntellisenseObject> ns in objects.GroupBy(o => o.Namespace))
             {
                 if (!Options.GlobalScope)
                 {
-                    sb.AppendFormat("declare module {0} {{\r\n", ns.Key);
+                    if (Options.UseNamespaceInsteadofModule)
+                    {
+                        sb.AppendFormat("declare namespace {0} {{\r\n", ns.Key);
+                    }
+                    else
+                    {
+                        sb.AppendFormat("declare module {0} {{\r\n", ns.Key);
+                    }
                 }
 
                 foreach (IntellisenseObject io in ns)
